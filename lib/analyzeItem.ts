@@ -1,5 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
+import {
+  getLanguageNameForAI,
+  getRegionNameForAI,
+  type ContentLocale,
+} from './locale';
 
 export type AnalysisResult = {
   objectName: string;
@@ -9,15 +14,24 @@ export type AnalysisResult = {
   marketplaceSearchQuery: string;
 };
 
-const ANALYSIS_PROMPT = `You are helping someone sell a used item. Analyze this photo and respond with ONLY valid JSON (no markdown fences), using exactly this shape:
+function buildAnalysisPrompt(contentLocale: ContentLocale, regionCode: string) {
+  const languageName = getLanguageNameForAI(contentLocale);
+  const regionName = getRegionNameForAI(regionCode);
+
+  return `You are helping someone sell a used item in ${regionName}. Analyze this photo and respond with ONLY valid JSON (no markdown fences), using exactly this shape:
 {
   "objectName": "short name of the item",
   "condition": "brief condition assessment",
   "estimatedPriceEUR": 25,
   "explanation": "1-2 sentences on how you estimated the price",
-  "marketplaceSearchQuery": "search terms for eBay"
+  "marketplaceSearchQuery": "local search terms for classifieds"
 }
-Use EUR for estimatedPriceEUR. If unsure, provide your best single-number estimate.`;
+Rules:
+- Write ALL string values in ${languageName}.
+- Use EUR for estimatedPriceEUR.
+- marketplaceSearchQuery must use words people in ${regionName} would type on Facebook Marketplace and local classifieds (not English unless the results language is English).
+- If unsure about price, provide your best single-number estimate.`;
+}
 
 // New Google AI Studio projects cannot use 2.5 models; see Google deprecations docs.
 const GEMINI_MODEL = 'gemini-3.1-flash-lite';
@@ -49,6 +63,8 @@ function formatError(error: unknown): string {
 export async function analyzeItemPhoto(
   photoUri: string,
   mimeType = 'image/jpeg',
+  contentLocale: ContentLocale = 'en',
+  regionCode = 'US',
 ): Promise<AnalysisResult> {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
@@ -68,7 +84,7 @@ export async function analyzeItemPhoto(
   let result;
   try {
     result = await model.generateContent([
-      { text: ANALYSIS_PROMPT },
+      { text: buildAnalysisPrompt(contentLocale, regionCode) },
       {
         inlineData: {
           data: base64,

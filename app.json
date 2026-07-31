@@ -35,7 +35,8 @@
           "photosPermission": "SirPriceMe needs photo library access to select item images.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-localization"
     ]
   }
 }

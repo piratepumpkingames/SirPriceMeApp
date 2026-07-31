@@ -6,17 +6,28 @@ import {
   Alert,
   Button,
   Image,
+  Linking,
   Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { analyzeItemPhoto, type AnalysisResult } from './lib/analyzeItem';
+import {
+  getDeviceLocale,
+  getLocalLanguageLabel,
+  getStrings,
+  resolveContentLocale,
+  type LanguageMode,
+} from './lib/locale';
+import { getMarketplaceLinks } from './lib/marketplaceLinks';
 
 export default function App() {
   const cameraRef = useRef<CameraView>(null);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [languageMode, setLanguageMode] = useState<LanguageMode>('local');
   const [showCamera, setShowCamera] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -25,11 +36,22 @@ export default function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const { regionCode } = getDeviceLocale();
+  const contentLocale = resolveContentLocale(languageMode);
+  const strings = getStrings(contentLocale);
+  const localLanguageLabel = getLocalLanguageLabel();
+
+  function setLanguage(mode: LanguageMode) {
+    setLanguageMode(mode);
+    setAnalysis(null);
+    setErrorMessage(null);
+  }
+
   async function takePhoto() {
     if (!cameraPermission?.granted) {
       const permission = await requestCameraPermission();
       if (!permission.granted) {
-        alert('Camera permission is required to take photos.');
+        alert(strings.cameraPermission);
         return;
       }
     }
@@ -66,17 +88,30 @@ export default function App() {
     setErrorMessage(null);
 
     try {
-      const result = await analyzeItemPhoto(photoUri, photoMimeType);
+      const result = await analyzeItemPhoto(
+        photoUri,
+        photoMimeType,
+        contentLocale,
+        regionCode,
+      );
       setAnalysis(result);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Something went wrong.';
+        error instanceof Error ? error.message : strings.genericError;
       console.error('Analyze failed:', error);
       setErrorMessage(message);
       setAnalysis(null);
-      Alert.alert('Analyze failed', message);
+      Alert.alert(strings.analyzeFailedTitle, message);
     } finally {
       setIsAnalyzing(false);
+    }
+  }
+
+  async function openMarketplaceLink(url: string) {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert(strings.linkOpenFailedTitle, strings.linkOpenFailedMessage);
     }
   }
 
@@ -85,15 +120,49 @@ export default function App() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.container}>
           <Text style={styles.title}>SirPriceMe</Text>
-          <Text style={styles.subtitle}>
-            Take a photo of any object to estimate its value
-          </Text>
+          <Text style={styles.subtitle}>{strings.subtitle}</Text>
+
+          <Text style={styles.languageLabel}>{strings.languageLabel}</Text>
+          <View style={styles.languageRow}>
+            <Pressable
+              style={[
+                styles.languageOption,
+                languageMode === 'en' && styles.languageOptionActive,
+              ]}
+              onPress={() => setLanguage('en')}
+            >
+              <Text
+                style={[
+                  styles.languageOptionText,
+                  languageMode === 'en' && styles.languageOptionTextActive,
+                ]}
+              >
+                {strings.languageEnglish}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.languageOption,
+                languageMode === 'local' && styles.languageOptionActive,
+              ]}
+              onPress={() => setLanguage('local')}
+            >
+              <Text
+                style={[
+                  styles.languageOptionText,
+                  languageMode === 'local' && styles.languageOptionTextActive,
+                ]}
+              >
+                {localLanguageLabel}
+              </Text>
+            </Pressable>
+          </View>
 
           <View style={styles.buttonRow}>
-            <Button title="Take photo" onPress={takePhoto} />
+            <Button title={strings.takePhoto} onPress={takePhoto} />
             {photoUri ? (
               <Button
-                title={isAnalyzing ? 'Analyzing...' : 'Analyze'}
+                title={isAnalyzing ? strings.analyzing : strings.analyze}
                 onPress={analyzePhoto}
                 disabled={isAnalyzing}
               />
@@ -107,7 +176,7 @@ export default function App() {
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.preview} />
           ) : (
-            <Text style={styles.hint}>Your photo will appear here</Text>
+            <Text style={styles.hint}>{strings.photoHint}</Text>
           )}
 
           {errorMessage ? (
@@ -122,10 +191,26 @@ export default function App() {
               <Text style={styles.price}>
                 ~€{analysis.estimatedPriceEUR.toFixed(0)}
               </Text>
-              <Text style={styles.label}>Condition</Text>
+              <Text style={styles.label}>{strings.condition}</Text>
               <Text style={styles.value}>{analysis.condition}</Text>
-              <Text style={styles.label}>Explanation</Text>
+              <Text style={styles.label}>{strings.explanation}</Text>
               <Text style={styles.value}>{analysis.explanation}</Text>
+
+              <Text style={styles.label}>{strings.whereToSell}</Text>
+              <Text style={styles.marketplaceHint}>{strings.marketplaceHint}</Text>
+              {getMarketplaceLinks(
+                analysis.marketplaceSearchQuery,
+                regionCode,
+                contentLocale,
+              ).map((link) => (
+                <Pressable
+                  key={link.id}
+                  style={styles.marketplaceLink}
+                  onPress={() => openMarketplaceLink(link.url)}
+                >
+                  <Text style={styles.marketplaceLinkText}>{link.label}</Text>
+                </Pressable>
+              ))}
             </View>
           ) : null}
 
@@ -142,9 +227,12 @@ export default function App() {
             onCameraReady={() => setIsCameraReady(true)}
           />
           <View style={styles.cameraControls}>
-            <Button title="Cancel" onPress={() => setShowCamera(false)} />
             <Button
-              title="Capture"
+              title={strings.cameraCancel}
+              onPress={() => setShowCamera(false)}
+            />
+            <Button
+              title={strings.cameraCapture}
               onPress={capturePhoto}
               disabled={!isCameraReady}
             />
@@ -175,11 +263,48 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+    marginBottom: 16,
+  },
+  languageLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#444',
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+    width: '100%',
+  },
+  languageRow: {
+    flexDirection: 'row',
+    gap: 8,
     marginBottom: 24,
+    width: '100%',
+  },
+  languageOption: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  languageOptionActive: {
+    borderColor: '#1a5fb4',
+    backgroundColor: '#e8f2ff',
+  },
+  languageOptionText: {
+    fontSize: 14,
+    color: '#444',
+    fontWeight: '500',
+  },
+  languageOptionTextActive: {
+    color: '#1a5fb4',
+    fontWeight: '700',
   },
   buttonRow: {
     gap: 12,
     marginBottom: 24,
+    width: '100%',
   },
   loader: {
     marginBottom: 16,
@@ -229,6 +354,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#333',
     marginBottom: 12,
+  },
+  marketplaceHint: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 12,
+  },
+  marketplaceLink: {
+    backgroundColor: '#fff',
+    borderColor: '#1a5fb4',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  marketplaceLinkText: {
+    color: '#1a5fb4',
+    fontSize: 15,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   cameraContainer: {
     flex: 1,
