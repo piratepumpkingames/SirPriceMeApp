@@ -40,6 +40,18 @@ type UiStrings = {
   catalogDisclaimer: string;
   exportPdfSoon: string;
   sellTitle: string;
+  listingAssistTitle: string;
+  listingAssistHint: string;
+  generateListing: string;
+  generatingListing: string;
+  regenerateListing: string;
+  listingTitleLabel: string;
+  listingDescriptionLabel: string;
+  copyTitle: string;
+  copyDescription: string;
+  copyAll: string;
+  copiedToClipboard: string;
+  listingFailedTitle: string;
   markAsListed: string;
   markedAsListed: string;
   alsoAddToCatalogTitle: string;
@@ -143,6 +155,18 @@ export const ui: Record<ContentLocale, UiStrings> = {
       'Estimates only. For insurance or legal use, confirm values with your insurer or a qualified appraiser.',
     exportPdfSoon: 'Export PDF (coming soon)',
     sellTitle: 'Sell this item',
+    listingAssistTitle: 'Listing text',
+    listingAssistHint: 'Copy and paste into Bolha, Facebook Marketplace, or similar.',
+    generateListing: 'Generate listing',
+    generatingListing: 'Writing listing...',
+    regenerateListing: 'Regenerate',
+    listingTitleLabel: 'Title',
+    listingDescriptionLabel: 'Description',
+    copyTitle: 'Copy title',
+    copyDescription: 'Copy description',
+    copyAll: 'Copy all',
+    copiedToClipboard: 'Copied to clipboard',
+    listingFailedTitle: 'Listing failed',
     markAsListed: 'Mark as listed',
     markedAsListed: 'Marked as listed for sale',
     alsoAddToCatalogTitle: 'Also add to catalog?',
@@ -219,6 +243,18 @@ export const ui: Record<ContentLocale, UiStrings> = {
       'Samo ocene. Za zavarovanje ali pravne namene preverite vrednosti pri zavarovalnici ali ocenjevalcu.',
     exportPdfSoon: 'Izvozi PDF (kmalu)',
     sellTitle: 'Prodaj predmet',
+    listingAssistTitle: 'Besedilo oglasa',
+    listingAssistHint: 'Kopirajte in prilepite na Bolho, Facebook Marketplace ipd.',
+    generateListing: 'Ustvari oglas',
+    generatingListing: 'Pripravljam oglas...',
+    regenerateListing: 'Znova ustvari',
+    listingTitleLabel: 'Naslov',
+    listingDescriptionLabel: 'Opis',
+    copyTitle: 'Kopiraj naslov',
+    copyDescription: 'Kopiraj opis',
+    copyAll: 'Kopiraj vse',
+    copiedToClipboard: 'Kopirano v odložišče',
+    listingFailedTitle: 'Oglas ni uspel',
     markAsListed: 'Označi kot objavljeno',
     markedAsListed: 'Označeno za prodajo',
     alsoAddToCatalogTitle: 'Dodam tudi v katalog?',
@@ -295,6 +331,18 @@ export const ui: Record<ContentLocale, UiStrings> = {
       'Samo procjene. Za osiguranje ili pravne svrhe potvrdite vrijednosti s osiguravateljem.',
     exportPdfSoon: 'Izvezi PDF (uskoro)',
     sellTitle: 'Prodaj predmet',
+    listingAssistTitle: 'Tekst oglasa',
+    listingAssistHint: 'Kopirajte i zalijepite na Njuškalo, Facebook Marketplace itd.',
+    generateListing: 'Generiraj oglas',
+    generatingListing: 'Pišem oglas...',
+    regenerateListing: 'Generiraj ponovno',
+    listingTitleLabel: 'Naslov',
+    listingDescriptionLabel: 'Opis',
+    copyTitle: 'Kopiraj naslov',
+    copyDescription: 'Kopiraj opis',
+    copyAll: 'Kopiraj sve',
+    copiedToClipboard: 'Kopirano u međuspremnik',
+    listingFailedTitle: 'Oglas nije uspio',
     markAsListed: 'Označi kao objavljeno',
     markedAsListed: 'Označeno za prodaju',
     alsoAddToCatalogTitle: 'Dodati u katalog?',
@@ -371,6 +419,18 @@ export const ui: Record<ContentLocale, UiStrings> = {
       'Nur Schätzungen. Für Versicherung oder Rechtliches Werte beim Versicherer prüfen.',
     exportPdfSoon: 'PDF exportieren (demnächst)',
     sellTitle: 'Artikel verkaufen',
+    listingAssistTitle: 'Anzeigentext',
+    listingAssistHint: 'Kopieren und in Kleinanzeigen, Facebook Marketplace usw. einfügen.',
+    generateListing: 'Anzeige erstellen',
+    generatingListing: 'Anzeige wird erstellt...',
+    regenerateListing: 'Neu erstellen',
+    listingTitleLabel: 'Titel',
+    listingDescriptionLabel: 'Beschreibung',
+    copyTitle: 'Titel kopieren',
+    copyDescription: 'Beschreibung kopieren',
+    copyAll: 'Alles kopieren',
+    copiedToClipboard: 'In Zwischenablage kopiert',
+    listingFailedTitle: 'Anzeige fehlgeschlagen',
     markAsListed: 'Als eingestellt markieren',
     markedAsListed: 'Als zum Verkauf markiert',
     alsoAddToCatalogTitle: 'Auch zum Katalog hinzufügen?',

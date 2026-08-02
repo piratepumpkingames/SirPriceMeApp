@@ -11,6 +11,8 @@ export type ItemRecord = {
   estimatedPriceEUR: number;
   explanation: string;
   marketplaceSearchQuery: string;
+  listingTitle: string | null;
+  listingDescription: string | null;
   userNotes: string;
   inCatalog: boolean;
   roomId: string | null;
@@ -41,6 +43,8 @@ export function createItemFromAnalysis(
     estimatedPriceEUR: analysis.estimatedPriceEUR,
     explanation: analysis.explanation,
     marketplaceSearchQuery: analysis.marketplaceSearchQuery,
+    listingTitle: null,
+    listingDescription: null,
     userNotes: '',
     inCatalog: false,
     roomId: null,

@@ -1,4 +1,17 @@
-import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { generateListingText } from '../lib/generateListing';
 import type { ContentLocale } from '../lib/locale';
 import { getStrings } from '../lib/locale';
 import { getMarketplaceLinks } from '../lib/marketplaceLinks';
@@ -11,6 +24,7 @@ type SellScreenProps = {
   onBack: () => void;
   onMarkListed: () => void;
   onUnmarkListed: () => void;
+  onListingSaved: (listingTitle: string, listingDescription: string) => void;
 };
 
 export function SellScreen({
@@ -20,11 +34,47 @@ export function SellScreen({
   onBack,
   onMarkListed,
   onUnmarkListed,
+  onListingSaved,
 }: SellScreenProps) {
   const strings = getStrings(locale);
+  const [listingTitle, setListingTitle] = useState(item.listingTitle ?? '');
+  const [listingDescription, setListingDescription] = useState(
+    item.listingDescription ?? '',
+  );
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    setListingTitle(item.listingTitle ?? '');
+    setListingDescription(item.listingDescription ?? '');
+  }, [item.id, item.listingTitle, item.listingDescription]);
+
+  const hasListing = listingTitle.trim().length > 0;
 
   async function openLink(url: string) {
     await Linking.openURL(url);
+  }
+
+  async function copyText(text: string) {
+    await Clipboard.setStringAsync(text);
+    Alert.alert(strings.copiedToClipboard);
+  }
+
+  async function handleGenerateListing() {
+    setIsGenerating(true);
+
+    try {
+      const listing = await generateListingText(item, locale, regionCode);
+      setListingTitle(listing.listingTitle);
+      setListingDescription(listing.listingDescription);
+      onListingSaved(listing.listingTitle, listing.listingDescription);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : strings.genericError;
+      console.error('Listing generation failed:', error);
+      Alert.alert(strings.listingFailedTitle, message);
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   return (
@@ -38,7 +88,68 @@ export function SellScreen({
       <Text style={styles.title}>{item.objectName}</Text>
       <Text style={styles.price}>~€{item.estimatedPriceEUR.toFixed(0)}</Text>
 
-      <Text style={styles.label}>{strings.whereToSell}</Text>
+      <Text style={styles.sectionTitle}>{strings.listingAssistTitle}</Text>
+      <Text style={styles.hint}>{strings.listingAssistHint}</Text>
+
+      {hasListing ? (
+        <View style={styles.listingBlock}>
+          <Text style={styles.fieldLabel}>{strings.listingTitleLabel}</Text>
+          <Text selectable style={styles.listingText}>
+            {listingTitle}
+          </Text>
+          <Pressable
+            style={styles.copyButton}
+            onPress={() => void copyText(listingTitle)}
+          >
+            <Text style={styles.copyButtonText}>{strings.copyTitle}</Text>
+          </Pressable>
+
+          <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
+            {strings.listingDescriptionLabel}
+          </Text>
+          <Text selectable style={styles.listingText}>
+            {listingDescription}
+          </Text>
+          <Pressable
+            style={styles.copyButton}
+            onPress={() => void copyText(listingDescription)}
+          >
+            <Text style={styles.copyButtonText}>{strings.copyDescription}</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.copyAllButton}
+            onPress={() =>
+              void copyText(`${listingTitle}\n\n${listingDescription}`)
+            }
+          >
+            <Text style={styles.copyAllButtonText}>{strings.copyAll}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      <Pressable
+        style={[styles.generateButton, isGenerating && styles.generateButtonDisabled]}
+        onPress={() => void handleGenerateListing()}
+        disabled={isGenerating}
+      >
+        {isGenerating ? (
+          <View style={styles.generateRow}>
+            <ActivityIndicator color="#fff" />
+            <Text style={styles.generateButtonText}>
+              {strings.generatingListing}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.generateButtonText}>
+            {hasListing ? strings.regenerateListing : strings.generateListing}
+          </Text>
+        )}
+      </Pressable>
+
+      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
+        {strings.whereToSell}
+      </Text>
       <Text style={styles.hint}>{strings.marketplaceHint}</Text>
 
       {getMarketplaceLinks(
@@ -110,16 +221,86 @@ const styles = StyleSheet.create({
     color: '#1a7f37',
     marginBottom: 16,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#444',
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#222',
     marginBottom: 4,
+  },
+  sectionTitleSpaced: {
+    marginTop: 8,
   },
   hint: {
     fontSize: 13,
     color: '#666',
     marginBottom: 12,
+  },
+  listingBlock: {
+    backgroundColor: '#f6f8fa',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#666',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  fieldLabelSpaced: {
+    marginTop: 12,
+  },
+  listingText: {
+    fontSize: 15,
+    color: '#222',
+    lineHeight: 22,
+  },
+  copyButton: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    backgroundColor: '#e8f0fe',
+  },
+  copyButtonText: {
+    color: '#1a5fb4',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  copyAllButton: {
+    marginTop: 12,
+    backgroundColor: '#1a5fb4',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  copyAllButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  generateButton: {
+    backgroundColor: '#1a7f37',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  generateButtonDisabled: {
+    opacity: 0.85,
+  },
+  generateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  generateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   marketplaceLink: {
     backgroundColor: '#fff',

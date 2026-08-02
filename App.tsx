@@ -240,6 +240,22 @@ export default function App() {
     }
   }
 
+  async function handleListingSaved(
+    listingTitle: string,
+    listingDescription: string,
+  ) {
+    if (!currentItem) {
+      return;
+    }
+
+    const updated = await saveItem({
+      ...currentItem,
+      listingTitle,
+      listingDescription,
+    });
+    setCurrentItem(updated);
+  }
+
   function handleRemoveFromCatalog() {
     if (!currentItem) {
       return;
@@ -412,6 +428,9 @@ export default function App() {
           onBack={() => setScreen('result')}
           onMarkListed={() => void handleMarkListed()}
           onUnmarkListed={handleUnmarkListed}
+          onListingSaved={(title, description) =>
+            void handleListingSaved(title, description)
+          }
         />
       ) : null}
       {screen === 'catalog' ? (
