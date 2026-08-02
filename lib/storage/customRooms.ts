@@ -9,17 +9,26 @@ export type CustomRoom = {
 
 const CUSTOM_ROOMS_KEY = '@sirpriceme/custom_rooms';
 
+function parseStoredArray<T>(raw: string | null): T[] {
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function createCustomRoomId(): string {
   return `custom:${createItemId()}`;
 }
 
 export async function loadCustomRooms(): Promise<CustomRoom[]> {
   const raw = await AsyncStorage.getItem(CUSTOM_ROOMS_KEY);
-  if (!raw) {
-    return [];
-  }
-
-  return JSON.parse(raw) as CustomRoom[];
+  return parseStoredArray<CustomRoom>(raw);
 }
 
 async function saveCustomRooms(rooms: CustomRoom[]): Promise<void> {

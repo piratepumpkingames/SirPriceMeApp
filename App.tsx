@@ -74,14 +74,14 @@ export default function App() {
     void refreshCustomRooms();
   }, []);
 
-  async function refreshCustomRooms() {
-    const rooms = await loadCustomRooms();
-    setCustomRooms(rooms);
-  }
-
   async function refreshCatalog() {
     const items = await loadItems();
-    setCatalogItems(items);
+    setCatalogItems(Array.isArray(items) ? items : []);
+  }
+
+  async function refreshCustomRooms() {
+    const rooms = await loadCustomRooms();
+    setCustomRooms(Array.isArray(rooms) ? rooms : []);
   }
 
   async function saveItem(item: ItemRecord): Promise<ItemRecord> {

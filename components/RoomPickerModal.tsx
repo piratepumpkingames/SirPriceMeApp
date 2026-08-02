@@ -26,7 +26,7 @@ type RoomPickerModalProps = {
 export function RoomPickerModal({
   visible,
   locale,
-  customRooms,
+  customRooms = [],
   onSelect,
   onCreateCustomRoom,
   onCancel,
@@ -96,7 +96,7 @@ export function RoomPickerModal({
               <Text style={styles.title}>{strings.pickRoom}</Text>
               <Text style={styles.hint}>{strings.pickRoomHint}</Text>
               <ScrollView>
-                {PRESET_ROOM_IDS.map((roomId) => (
+                {(PRESET_ROOM_IDS ?? []).map((roomId) => (
                   <Pressable
                     key={roomId}
                     style={styles.roomOption}

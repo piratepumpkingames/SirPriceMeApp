@@ -10,13 +10,22 @@ export type CatalogRoomSummary = {
 
 const ITEMS_KEY = '@sirpriceme/items';
 
-export async function loadItems(): Promise<ItemRecord[]> {
-  const raw = await AsyncStorage.getItem(ITEMS_KEY);
+function parseStoredArray<T>(raw: string | null): T[] {
   if (!raw) {
     return [];
   }
 
-  return JSON.parse(raw) as ItemRecord[];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function loadItems(): Promise<ItemRecord[]> {
+  const raw = await AsyncStorage.getItem(ITEMS_KEY);
+  return parseStoredArray<ItemRecord>(raw);
 }
 
 async function saveItems(items: ItemRecord[]): Promise<void> {
@@ -53,11 +62,11 @@ export async function getItemById(id: string): Promise<ItemRecord | null> {
   return items.find((entry) => entry.id === id) ?? null;
 }
 
-export function getCatalogItems(items: ItemRecord[]): ItemRecord[] {
-  return items.filter((item) => item.inCatalog);
+export function getCatalogItems(items: ItemRecord[] | null | undefined): ItemRecord[] {
+  return (items ?? []).filter((item) => item.inCatalog);
 }
 
-export function getCatalogTotalEUR(items: ItemRecord[]): number {
+export function getCatalogTotalEUR(items: ItemRecord[] | null | undefined): number {
   return getCatalogItems(items).reduce(
     (sum, item) => sum + item.estimatedPriceEUR,
     0,
@@ -65,7 +74,7 @@ export function getCatalogTotalEUR(items: ItemRecord[]): number {
 }
 
 export function getCatalogRoomSummaries(
-  items: ItemRecord[],
+  items: ItemRecord[] | null | undefined,
 ): CatalogRoomSummary[] {
   const totals = new Map<string, CatalogRoomSummary>();
 
@@ -92,7 +101,7 @@ export function getCatalogRoomSummaries(
 }
 
 export function getCatalogItemsInRoom(
-  items: ItemRecord[],
+  items: ItemRecord[] | null | undefined,
   roomId: string,
 ): ItemRecord[] {
   return getCatalogItems(items).filter((item) => item.roomId === roomId);

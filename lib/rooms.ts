@@ -80,12 +80,13 @@ export function getRoomLabel(roomId: PresetRoomId, locale: ContentLocale): strin
 export function resolveRoomLabel(
   roomId: string,
   locale: ContentLocale,
-  customRooms: CustomRoom[],
+  customRooms: CustomRoom[] | null | undefined,
 ): string {
+  const rooms = customRooms ?? [];
   if (isPresetRoomId(roomId)) {
     return getPresetRoomLabel(roomId, locale);
   }
 
-  const customRoom = customRooms.find((room) => room.id === roomId);
+  const customRoom = rooms.find((room) => room.id === roomId);
   return customRoom?.label ?? roomId;
 }
