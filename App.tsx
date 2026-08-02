@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
@@ -6,7 +6,6 @@ import {
   Alert,
   Button,
   Image,
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -14,37 +13,93 @@ import {
   Text,
   View,
 } from 'react-native';
-import { analyzeItemPhoto, type AnalysisResult } from './lib/analyzeItem';
+import { DisclaimerModal } from './components/DisclaimerModal';
+import { RoomPickerModal } from './components/RoomPickerModal';
+import { analyzeItemPhoto } from './lib/analyzeItem';
 import {
+  formatString,
   getDeviceLocale,
   getLocalLanguageLabel,
   getStrings,
   resolveContentLocale,
   type LanguageMode,
 } from './lib/locale';
-import { getMarketplaceLinks } from './lib/marketplaceLinks';
+import {
+  addCustomRoom,
+  loadCustomRooms,
+  type CustomRoom,
+} from './lib/storage/customRooms';
+import {
+  isDisclaimerAccepted,
+  setDisclaimerAccepted,
+} from './lib/storage/disclaimer';
+import {
+  getCatalogItems,
+  loadItems,
+  persistPhotoUri,
+  upsertItem,
+} from './lib/storage/items';
+import { CatalogScreen } from './screens/CatalogScreen';
+import { ResultHubScreen } from './screens/ResultHubScreen';
+import { SellScreen } from './screens/SellScreen';
+import { createItemFromAnalysis, type ItemRecord } from './types/item';
+
+type Screen = 'home' | 'result' | 'sell' | 'catalog';
 
 export default function App() {
   const cameraRef = useRef<CameraView>(null);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [languageMode, setLanguageMode] = useState<LanguageMode>('local');
+  const [screen, setScreen] = useState<Screen>('home');
   const [showCamera, setShowCamera] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoMimeType, setPhotoMimeType] = useState('image/jpeg');
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [currentItem, setCurrentItem] = useState<ItemRecord | null>(null);
+  const [catalogItems, setCatalogItems] = useState<ItemRecord[]>([]);
+  const [customRooms, setCustomRooms] = useState<CustomRoom[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [showRoomPicker, setShowRoomPicker] = useState(false);
 
   const { regionCode } = getDeviceLocale();
   const contentLocale = resolveContentLocale(languageMode);
   const strings = getStrings(contentLocale);
   const localLanguageLabel = getLocalLanguageLabel();
+  const catalogCount = getCatalogItems(catalogItems).length;
+
+  useEffect(() => {
+    void refreshCatalog();
+    void refreshCustomRooms();
+  }, []);
+
+  async function refreshCustomRooms() {
+    const rooms = await loadCustomRooms();
+    setCustomRooms(rooms);
+  }
+
+  async function refreshCatalog() {
+    const items = await loadItems();
+    setCatalogItems(items);
+  }
+
+  async function saveItem(item: ItemRecord): Promise<ItemRecord> {
+    const saved = await upsertItem(item);
+    await refreshCatalog();
+    return saved;
+  }
 
   function setLanguage(mode: LanguageMode) {
     setLanguageMode(mode);
-    setAnalysis(null);
     setErrorMessage(null);
+  }
+
+  function resetScan() {
+    setPhotoUri(null);
+    setCurrentItem(null);
+    setErrorMessage(null);
+    setScreen('home');
   }
 
   async function takePhoto() {
@@ -65,15 +120,14 @@ export default function App() {
       return;
     }
 
-    const photo = await cameraRef.current.takePictureAsync({
-      quality: 0.8,
-    });
+    const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
 
     if (photo?.uri) {
       setPhotoUri(photo.uri);
       setPhotoMimeType('image/jpeg');
-      setAnalysis(null);
+      setCurrentItem(null);
       setErrorMessage(null);
+      setScreen('home');
     }
 
     setShowCamera(false);
@@ -88,39 +142,185 @@ export default function App() {
     setErrorMessage(null);
 
     try {
-      const result = await analyzeItemPhoto(
+      const analysis = await analyzeItemPhoto(
         photoUri,
         photoMimeType,
         contentLocale,
         regionCode,
       );
-      setAnalysis(result);
+      const item = await saveItem(
+        createItemFromAnalysis(analysis, photoUri, photoMimeType),
+      );
+      setCurrentItem(item);
+      setScreen('result');
     } catch (error) {
       const message =
         error instanceof Error ? error.message : strings.genericError;
       console.error('Analyze failed:', error);
       setErrorMessage(message);
-      setAnalysis(null);
       Alert.alert(strings.analyzeFailedTitle, message);
     } finally {
       setIsAnalyzing(false);
     }
   }
 
-  async function openMarketplaceLink(url: string) {
-    try {
-      await Linking.openURL(url);
-    } catch {
-      Alert.alert(strings.linkOpenFailedTitle, strings.linkOpenFailedMessage);
+  async function beginAddToCatalog() {
+    if (!currentItem) {
+      return;
+    }
+
+    const accepted = await isDisclaimerAccepted();
+    if (accepted) {
+      setShowRoomPicker(true);
+    } else {
+      setShowDisclaimer(true);
     }
   }
 
-  return (
-    <>
+  async function handleDisclaimerAccept(dontShowAgain: boolean) {
+    if (dontShowAgain) {
+      await setDisclaimerAccepted();
+    }
+    setShowDisclaimer(false);
+    setShowRoomPicker(true);
+  }
+
+  async function handleRoomSelect(roomId: string) {
+    if (!currentItem) {
+      return;
+    }
+
+    setShowRoomPicker(false);
+
+    try {
+      let photoUriToSave = currentItem.photoUri;
+      if (!currentItem.inCatalog) {
+        photoUriToSave = await persistPhotoUri(currentItem.photoUri);
+      }
+
+      const updated = await saveItem({
+        ...currentItem,
+        photoUri: photoUriToSave,
+        inCatalog: true,
+        roomId,
+      });
+      setCurrentItem(updated);
+      Alert.alert(strings.savedToCatalog);
+
+      if (!updated.forSale) {
+        Alert.alert(strings.alsoSellTitle, strings.alsoSellMessage, [
+          { text: strings.no, style: 'cancel' },
+          { text: strings.yes, onPress: () => setScreen('sell') },
+        ]);
+      }
+    } catch (error) {
+      console.error('Catalog save failed:', error);
+      Alert.alert(strings.analyzeFailedTitle, strings.genericError);
+    }
+  }
+
+  async function handleMarkListed() {
+    if (!currentItem) {
+      return;
+    }
+
+    const updated = await saveItem({
+      ...currentItem,
+      forSale: true,
+      listedAt: new Date().toISOString(),
+    });
+    setCurrentItem(updated);
+    Alert.alert(strings.markedAsListed);
+
+    if (!updated.inCatalog) {
+      Alert.alert(strings.alsoAddToCatalogTitle, strings.alsoAddToCatalogMessage, [
+        { text: strings.no, style: 'cancel' },
+        { text: strings.yes, onPress: () => void beginAddToCatalog() },
+      ]);
+    }
+  }
+
+  function handleRemoveFromCatalog() {
+    if (!currentItem) {
+      return;
+    }
+
+    Alert.alert(
+      strings.removeFromCatalogConfirmTitle,
+      strings.removeFromCatalogConfirmMessage,
+      [
+        { text: strings.cancel, style: 'cancel' },
+        {
+          text: strings.confirm,
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              const updated = await saveItem({
+                ...currentItem,
+                inCatalog: false,
+                roomId: null,
+              });
+              setCurrentItem(updated);
+              Alert.alert(strings.removedFromCatalog);
+            })();
+          },
+        },
+      ],
+    );
+  }
+
+  function handleUnmarkListed() {
+    if (!currentItem) {
+      return;
+    }
+
+    Alert.alert(
+      strings.unmarkAsListedConfirmTitle,
+      strings.unmarkAsListedConfirmMessage,
+      [
+        { text: strings.cancel, style: 'cancel' },
+        {
+          text: strings.confirm,
+          onPress: () => {
+            void (async () => {
+              const updated = await saveItem({
+                ...currentItem,
+                forSale: false,
+                listedAt: null,
+              });
+              setCurrentItem(updated);
+              Alert.alert(strings.unmarkedAsListed);
+            })();
+          },
+        },
+      ],
+    );
+  }
+
+  async function handleCreateCustomRoom(label: string) {
+    const room = await addCustomRoom(label);
+    await refreshCustomRooms();
+    return room;
+  }
+
+  function openCatalogItem(item: ItemRecord) {
+    setCurrentItem(item);
+    setScreen('result');
+  }
+
+  function renderHome() {
+    return (
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.container}>
           <Text style={styles.title}>SirPriceMe</Text>
           <Text style={styles.subtitle}>{strings.subtitle}</Text>
+
+          <Pressable style={styles.catalogLink} onPress={() => setScreen('catalog')}>
+            <Text style={styles.catalogLinkText}>
+              {strings.myCatalog}
+              {catalogCount > 0 ? ` (${catalogCount})` : ''}
+            </Text>
+          </Pressable>
 
           <Text style={styles.languageLabel}>{strings.languageLabel}</Text>
           <View style={styles.languageRow}>
@@ -184,39 +384,60 @@ export default function App() {
               {errorMessage}
             </Text>
           ) : null}
-
-          {analysis ? (
-            <View style={styles.resultCard}>
-              <Text style={styles.resultTitle}>{analysis.objectName}</Text>
-              <Text style={styles.price}>
-                ~€{analysis.estimatedPriceEUR.toFixed(0)}
-              </Text>
-              <Text style={styles.label}>{strings.condition}</Text>
-              <Text style={styles.value}>{analysis.condition}</Text>
-              <Text style={styles.label}>{strings.explanation}</Text>
-              <Text style={styles.value}>{analysis.explanation}</Text>
-
-              <Text style={styles.label}>{strings.whereToSell}</Text>
-              <Text style={styles.marketplaceHint}>{strings.marketplaceHint}</Text>
-              {getMarketplaceLinks(
-                analysis.marketplaceSearchQuery,
-                regionCode,
-                contentLocale,
-              ).map((link) => (
-                <Pressable
-                  key={link.id}
-                  style={styles.marketplaceLink}
-                  onPress={() => openMarketplaceLink(link.url)}
-                >
-                  <Text style={styles.marketplaceLinkText}>{link.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-
-          <StatusBar style="auto" />
         </View>
       </ScrollView>
+    );
+  }
+
+  return (
+    <>
+      {screen === 'home' ? renderHome() : null}
+      {screen === 'result' && currentItem ? (
+        <ResultHubScreen
+          item={currentItem}
+          locale={contentLocale}
+          customRooms={customRooms}
+          onSell={() => setScreen('sell')}
+          onAddToCatalog={() => void beginAddToCatalog()}
+          onRemoveFromCatalog={handleRemoveFromCatalog}
+          onOpenCatalog={() => setScreen('catalog')}
+          onScanAnother={resetScan}
+        />
+      ) : null}
+      {screen === 'sell' && currentItem ? (
+        <SellScreen
+          item={currentItem}
+          locale={contentLocale}
+          regionCode={regionCode}
+          onBack={() => setScreen('result')}
+          onMarkListed={() => void handleMarkListed()}
+          onUnmarkListed={handleUnmarkListed}
+        />
+      ) : null}
+      {screen === 'catalog' ? (
+        <CatalogScreen
+          items={catalogItems}
+          locale={contentLocale}
+          customRooms={customRooms}
+          onBack={() => setScreen(currentItem ? 'result' : 'home')}
+          onSelectItem={openCatalogItem}
+        />
+      ) : null}
+
+      <DisclaimerModal
+        visible={showDisclaimer}
+        locale={contentLocale}
+        onAccept={(dontShowAgain) => void handleDisclaimerAccept(dontShowAgain)}
+        onCancel={() => setShowDisclaimer(false)}
+      />
+      <RoomPickerModal
+        visible={showRoomPicker}
+        locale={contentLocale}
+        customRooms={customRooms}
+        onSelect={(roomId) => void handleRoomSelect(roomId)}
+        onCreateCustomRoom={handleCreateCustomRoom}
+        onCancel={() => setShowRoomPicker(false)}
+      />
 
       <Modal visible={showCamera} animationType="slide">
         <View style={styles.cameraContainer}>
@@ -239,6 +460,8 @@ export default function App() {
           </View>
         </View>
       </Modal>
+
+      <StatusBar style="auto" />
     </>
   );
 }
@@ -263,7 +486,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+    marginBottom: 8,
+  },
+  catalogLink: {
     marginBottom: 16,
+  },
+  catalogLinkText: {
+    color: '#1a5fb4',
+    fontSize: 16,
+    fontWeight: '600',
   },
   languageLabel: {
     fontSize: 14,
@@ -326,54 +557,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     width: '100%',
     fontSize: 13,
-  },
-  resultCard: {
-    width: '100%',
-    backgroundColor: '#f5f7fb',
-    borderRadius: 12,
-    padding: 16,
-  },
-  resultTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  price: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1a7f37',
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#444',
-    marginBottom: 4,
-  },
-  value: {
-    fontSize: 15,
-    color: '#333',
-    marginBottom: 12,
-  },
-  marketplaceHint: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 12,
-  },
-  marketplaceLink: {
-    backgroundColor: '#fff',
-    borderColor: '#1a5fb4',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  marketplaceLinkText: {
-    color: '#1a5fb4',
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
   },
   cameraContainer: {
     flex: 1,
