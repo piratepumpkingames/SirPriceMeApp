@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -62,73 +64,80 @@ export function RoomPickerModal({
     }
   }
 
+  const newRoomForm = (
+    <View style={[styles.card, styles.cardForm]}>
+      <Text style={styles.title}>{strings.newRoomTitle}</Text>
+      <Text style={styles.hint}>{strings.newRoomHint}</Text>
+      <TextInput
+        style={styles.input}
+        value={newRoomName}
+        onChangeText={setNewRoomName}
+        placeholder={strings.newRoomPlaceholder}
+        autoFocus
+      />
+      <Pressable
+        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+        onPress={() => void handleSaveNewRoom()}
+        disabled={isSaving}
+      >
+        <Text style={styles.saveButtonText}>{strings.saveRoom}</Text>
+      </Pressable>
+      <Pressable
+        style={styles.cancelButton}
+        onPress={() => setShowNewRoomForm(false)}
+      >
+        <Text style={styles.cancelButtonText}>{strings.back}</Text>
+      </Pressable>
+    </View>
+  );
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
-        <View style={styles.card}>
-          {showNewRoomForm ? (
-            <>
-              <Text style={styles.title}>{strings.newRoomTitle}</Text>
-              <Text style={styles.hint}>{strings.newRoomHint}</Text>
-              <TextInput
-                style={styles.input}
-                value={newRoomName}
-                onChangeText={setNewRoomName}
-                placeholder={strings.newRoomPlaceholder}
-                autoFocus
-              />
-              <Pressable
-                style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-                onPress={() => void handleSaveNewRoom()}
-                disabled={isSaving}
-              >
-                <Text style={styles.saveButtonText}>{strings.saveRoom}</Text>
-              </Pressable>
-              <Pressable
-                style={styles.cancelButton}
-                onPress={() => setShowNewRoomForm(false)}
-              >
-                <Text style={styles.cancelButtonText}>{strings.back}</Text>
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <Text style={styles.title}>{strings.pickRoom}</Text>
-              <Text style={styles.hint}>{strings.pickRoomHint}</Text>
-              <ScrollView>
-                {(PRESET_ROOM_IDS ?? []).map((roomId) => (
-                  <Pressable
-                    key={roomId}
-                    style={styles.roomOption}
-                    onPress={() => onSelect(roomId)}
-                  >
-                    <Text style={styles.roomOptionText}>
-                      {resolveRoomLabel(roomId, locale, customRooms)}
-                    </Text>
-                  </Pressable>
-                ))}
-                {customRooms.map((room) => (
-                  <Pressable
-                    key={room.id}
-                    style={styles.roomOption}
-                    onPress={() => onSelect(room.id)}
-                  >
-                    <Text style={styles.roomOptionText}>{room.label}</Text>
-                  </Pressable>
-                ))}
+        {showNewRoomForm ? (
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.formAvoider}
+          >
+            {newRoomForm}
+          </KeyboardAvoidingView>
+        ) : (
+          <View style={[styles.card, styles.cardList]}>
+            <Text style={styles.title}>{strings.pickRoom}</Text>
+            <Text style={styles.hint}>{strings.pickRoomHint}</Text>
+            <ScrollView keyboardShouldPersistTaps="handled">
+              {(PRESET_ROOM_IDS ?? []).map((roomId) => (
                 <Pressable
-                  style={styles.newRoomOption}
-                  onPress={() => setShowNewRoomForm(true)}
+                  key={roomId}
+                  style={styles.roomOption}
+                  onPress={() => onSelect(roomId)}
                 >
-                  <Text style={styles.newRoomOptionText}>{strings.newRoom}</Text>
+                  <Text style={styles.roomOptionText}>
+                    {resolveRoomLabel(roomId, locale, customRooms)}
+                  </Text>
                 </Pressable>
-              </ScrollView>
-              <Pressable style={styles.cancelButton} onPress={onCancel}>
-                <Text style={styles.cancelButtonText}>{strings.back}</Text>
+              ))}
+              {customRooms.map((room) => (
+                <Pressable
+                  key={room.id}
+                  style={styles.roomOption}
+                  onPress={() => onSelect(room.id)}
+                >
+                  <Text style={styles.roomOptionText}>{room.label}</Text>
+                </Pressable>
+              ))}
+              <Pressable
+                style={styles.newRoomOption}
+                onPress={() => setShowNewRoomForm(true)}
+              >
+                <Text style={styles.newRoomOptionText}>{strings.newRoom}</Text>
               </Pressable>
-            </>
-          )}
-        </View>
+            </ScrollView>
+            <Pressable style={styles.cancelButton} onPress={onCancel}>
+              <Text style={styles.cancelButtonText}>{strings.back}</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
     </Modal>
   );
@@ -145,7 +154,16 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 20,
+    flexShrink: 0,
+  },
+  cardList: {
     maxHeight: '70%',
+  },
+  cardForm: {
+    width: '100%',
+  },
+  formAvoider: {
+    width: '100%',
   },
   title: {
     fontSize: 20,
@@ -164,6 +182,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
+    minHeight: 48,
+    backgroundColor: '#fff',
     marginBottom: 16,
   },
   saveButton: {

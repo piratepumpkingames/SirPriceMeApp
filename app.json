@@ -20,7 +20,8 @@
       "permissions": [
         "android.permission.CAMERA"
       ],
-      "package": "com.piratepumpkin.SirPriceMeApp"
+      "package": "com.piratepumpkin.SirPriceMeApp",
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/favicon.png"
