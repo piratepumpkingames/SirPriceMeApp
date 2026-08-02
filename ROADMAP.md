@@ -2,10 +2,11 @@
 
 ## Next up
 
-- **Phase 3 — Catalog PDF:** Export catalog as PDF with disclaimer footer and per-item lines.
+- *(Nothing queued — see **Later** for optional ideas.)*
 
 ## Done
 
+- **Phase 3 — Catalog PDF:** Export catalog as PDF with disclaimer footer and per-item lines.
 - **Phase 2 — Sell assist:** AI-generated listing title and description on the Sell screen (copy-paste for Bolha, Facebook, etc.).
 
 ## Before public Play Store release

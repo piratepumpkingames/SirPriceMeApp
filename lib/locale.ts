@@ -38,7 +38,11 @@ type UiStrings = {
   catalogSummary: string;
   catalogEmpty: string;
   catalogDisclaimer: string;
-  exportPdfSoon: string;
+  exportPdf: string;
+  exportingPdf: string;
+  exportPdfFailedTitle: string;
+  pdfExportedOn: string;
+  pdfUnassignedRoom: string;
   sellTitle: string;
   listingAssistTitle: string;
   listingAssistHint: string;
@@ -153,7 +157,11 @@ export const ui: Record<ContentLocale, UiStrings> = {
     catalogEmpty: 'No items in your catalog yet. Scan something and tap Add to catalog.',
     catalogDisclaimer:
       'Estimates only. For insurance or legal use, confirm values with your insurer or a qualified appraiser.',
-    exportPdfSoon: 'Export PDF (coming soon)',
+    exportPdf: 'Export PDF',
+    exportingPdf: 'Creating PDF...',
+    exportPdfFailedTitle: 'Export failed',
+    pdfExportedOn: 'Exported on {date}',
+    pdfUnassignedRoom: 'Unassigned',
     sellTitle: 'Sell this item',
     listingAssistTitle: 'Listing text',
     listingAssistHint: 'Copy and paste into Bolha, Facebook Marketplace, or similar.',
@@ -241,7 +249,11 @@ export const ui: Record<ContentLocale, UiStrings> = {
     catalogEmpty: 'Katalog je prazen. Scanirajte predmet in tapnite Dodaj v katalog.',
     catalogDisclaimer:
       'Samo ocene. Za zavarovanje ali pravne namene preverite vrednosti pri zavarovalnici ali ocenjevalcu.',
-    exportPdfSoon: 'Izvozi PDF (kmalu)',
+    exportPdf: 'Izvozi PDF',
+    exportingPdf: 'Pripravljam PDF...',
+    exportPdfFailedTitle: 'Izvoz ni uspel',
+    pdfExportedOn: 'Izvoženo {date}',
+    pdfUnassignedRoom: 'Nedodeljeno',
     sellTitle: 'Prodaj predmet',
     listingAssistTitle: 'Besedilo oglasa',
     listingAssistHint: 'Kopirajte in prilepite na Bolho, Facebook Marketplace ipd.',
@@ -329,7 +341,11 @@ export const ui: Record<ContentLocale, UiStrings> = {
     catalogEmpty: 'Katalog je prazan. Skenirajte predmet i dodajte ga u katalog.',
     catalogDisclaimer:
       'Samo procjene. Za osiguranje ili pravne svrhe potvrdite vrijednosti s osiguravateljem.',
-    exportPdfSoon: 'Izvezi PDF (uskoro)',
+    exportPdf: 'Izvezi PDF',
+    exportingPdf: 'Pripremam PDF...',
+    exportPdfFailedTitle: 'Izvoz nije uspio',
+    pdfExportedOn: 'Izvezeno {date}',
+    pdfUnassignedRoom: 'Nedodijeljeno',
     sellTitle: 'Prodaj predmet',
     listingAssistTitle: 'Tekst oglasa',
     listingAssistHint: 'Kopirajte i zalijepite na Njuškalo, Facebook Marketplace itd.',
@@ -417,7 +433,11 @@ export const ui: Record<ContentLocale, UiStrings> = {
     catalogEmpty: 'Noch keine Artikel. Scannen und zum Katalog hinzufügen.',
     catalogDisclaimer:
       'Nur Schätzungen. Für Versicherung oder Rechtliches Werte beim Versicherer prüfen.',
-    exportPdfSoon: 'PDF exportieren (demnächst)',
+    exportPdf: 'PDF exportieren',
+    exportingPdf: 'PDF wird erstellt...',
+    exportPdfFailedTitle: 'Export fehlgeschlagen',
+    pdfExportedOn: 'Exportiert am {date}',
+    pdfUnassignedRoom: 'Nicht zugeordnet',
     sellTitle: 'Artikel verkaufen',
     listingAssistTitle: 'Anzeigentext',
     listingAssistHint: 'Kopieren und in Kleinanzeigen, Facebook Marketplace usw. einfügen.',

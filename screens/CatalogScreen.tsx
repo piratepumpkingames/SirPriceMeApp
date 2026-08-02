@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -7,6 +9,10 @@ import {
   Text,
   View,
 } from 'react-native';
+import {
+  CatalogPdfError,
+  exportAndShareCatalogPdf,
+} from '../lib/exportCatalogPdf';
 import type { ContentLocale } from '../lib/locale';
 import { formatString, getStrings } from '../lib/locale';
 import { resolveRoomLabel } from '../lib/rooms';
@@ -36,6 +42,7 @@ export function CatalogScreen({
 }: CatalogScreenProps) {
   const strings = getStrings(locale);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const catalogItems = getCatalogItems(items);
   const total = getCatalogTotalEUR(items);
@@ -56,6 +63,50 @@ export function CatalogScreen({
     onBack();
   }
 
+  async function handleExportPdf() {
+    if (catalogItems.length === 0) {
+      Alert.alert(strings.exportPdf, strings.catalogEmpty);
+      return;
+    }
+
+    setIsExporting(true);
+
+    try {
+      await exportAndShareCatalogPdf({
+        items,
+        locale,
+        customRooms,
+        strings: {
+          catalogTitle: strings.catalogTitle,
+          catalogSummary: strings.catalogSummary,
+          catalogDisclaimer: strings.catalogDisclaimer,
+          disclaimerTitle: strings.disclaimerTitle,
+          disclaimerBody: strings.disclaimerBody,
+          condition: strings.condition,
+          valueSourceAi: strings.valueSourceAi,
+          notesLabel: strings.notesLabel,
+          pdfExportedOn: strings.pdfExportedOn,
+          pdfUnassignedRoom: strings.pdfUnassignedRoom,
+          statusForSale: strings.statusForSale,
+          statusListed: strings.statusListed,
+          exportPdf: strings.exportPdf,
+        },
+      });
+    } catch (error) {
+      if (error instanceof CatalogPdfError && error.code === 'EMPTY_CATALOG') {
+        Alert.alert(strings.exportPdf, strings.catalogEmpty);
+        return;
+      }
+
+      const message =
+        error instanceof Error ? error.message : strings.genericError;
+      console.error('Catalog PDF export failed:', error);
+      Alert.alert(strings.exportPdfFailedTitle, message);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Pressable onPress={handleBack}>
@@ -74,8 +125,22 @@ export function CatalogScreen({
         <Text style={styles.disclaimerText}>{strings.catalogDisclaimer}</Text>
       </View>
 
-      <Pressable style={styles.exportPlaceholder} disabled>
-        <Text style={styles.exportPlaceholderText}>{strings.exportPdfSoon}</Text>
+      <Pressable
+        style={[
+          styles.exportButton,
+          (catalogItems.length === 0 || isExporting) && styles.exportButtonDisabled,
+        ]}
+        onPress={() => void handleExportPdf()}
+        disabled={catalogItems.length === 0 || isExporting}
+      >
+        {isExporting ? (
+          <View style={styles.exportRow}>
+            <ActivityIndicator color="#fff" />
+            <Text style={styles.exportButtonText}>{strings.exportingPdf}</Text>
+          </View>
+        ) : (
+          <Text style={styles.exportButtonText}>{strings.exportPdf}</Text>
+        )}
       </Pressable>
 
       {catalogItems.length === 0 ? (
@@ -165,17 +230,25 @@ const styles = StyleSheet.create({
     color: '#6b5a2e',
     lineHeight: 18,
   },
-  exportPlaceholder: {
-    backgroundColor: '#eee',
+  exportButton: {
+    backgroundColor: '#1a5fb4',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
     marginBottom: 20,
-    opacity: 0.7,
   },
-  exportPlaceholderText: {
-    color: '#666',
-    fontWeight: '600',
+  exportButtonDisabled: {
+    opacity: 0.55,
+  },
+  exportRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  exportButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
   },
   sectionTitle: {
     fontSize: 18,
