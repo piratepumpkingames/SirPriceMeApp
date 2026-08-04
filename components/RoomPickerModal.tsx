@@ -1,6 +1,8 @@
+import { isRunningInExpoGo } from 'expo';
 import { useEffect, useState } from 'react';
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -25,6 +27,9 @@ type RoomPickerModalProps = {
   onCancel: () => void;
 };
 
+const shouldManualKeyboardLift =
+  Platform.OS === 'android' && !isRunningInExpoGo();
+
 export function RoomPickerModal({
   visible,
   locale,
@@ -37,14 +42,35 @@ export function RoomPickerModal({
   const [showNewRoomForm, setShowNewRoomForm] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
     if (!visible) {
       setShowNewRoomForm(false);
       setNewRoomName('');
       setIsSaving(false);
+      setKeyboardHeight(0);
     }
   }, [visible]);
+
+  useEffect(() => {
+    if (!shouldManualKeyboardLift || !showNewRoomForm) {
+      setKeyboardHeight(0);
+      return;
+    }
+
+    const showSub = Keyboard.addListener('keyboardDidShow', (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [showNewRoomForm]);
 
   async function handleSaveNewRoom() {
     const trimmed = newRoomName.trim();
@@ -97,7 +123,10 @@ export function RoomPickerModal({
         {showNewRoomForm ? (
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.formAvoider}
+            style={[
+              styles.formAvoider,
+              keyboardHeight > 0 && { marginBottom: keyboardHeight },
+            ]}
           >
             {newRoomForm}
           </KeyboardAvoidingView>
