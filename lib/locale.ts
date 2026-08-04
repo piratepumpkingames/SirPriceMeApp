@@ -125,6 +125,16 @@ type UiStrings = {
   newRoomPlaceholder: string;
   saveRoom: string;
   roomNameRequired: string;
+  homeEmptyTitle: string;
+  homeEmptyMessage: string;
+  catalogEmptyTitle: string;
+  pdfExportHint: string;
+  dismissHint: string;
+  analyzingStepPhoto: string;
+  analyzingStepIdentify: string;
+  analyzingStepPrice: string;
+  itemDetailsSection: string;
+  itemActionsSection: string;
 };
 
 const LOCALE_NAMES: Record<ContentLocale, string> = {
@@ -286,6 +296,18 @@ export const ui: Record<ContentLocale, UiStrings> = {
     newRoomPlaceholder: 'e.g. Shed, Basement, Kids room',
     saveRoom: 'Save room',
     roomNameRequired: 'Please enter a room name.',
+    homeEmptyTitle: 'Scan your first item',
+    homeEmptyMessage:
+      'Take a photo of anything at home — furniture, electronics, collectibles — and get an AI price estimate in seconds.',
+    catalogEmptyTitle: 'Your catalog is empty',
+    pdfExportHint:
+      'Tip: Export your catalog as a PDF for insurance records or when moving house.',
+    dismissHint: 'Got it',
+    analyzingStepPhoto: 'Analyzing photo…',
+    analyzingStepIdentify: 'Identifying the item…',
+    analyzingStepPrice: 'Estimating value…',
+    itemDetailsSection: 'Details',
+    itemActionsSection: 'Actions',
   },
   sl: {
     subtitle: 'Fotografirajte predmet in ocenite njegovo vrednost',
@@ -416,6 +438,18 @@ export const ui: Record<ContentLocale, UiStrings> = {
     newRoomPlaceholder: 'npr. Lopa, Klet, Shramba',
     saveRoom: 'Shrani prostor',
     roomNameRequired: 'Vnesite ime prostora.',
+    homeEmptyTitle: 'Scanirajte prvi predmet',
+    homeEmptyMessage:
+      'Fotografirajte karkoli doma — pohištvo, elektroniko, zbirateljske predmete — in v sekundah dobite AI oceno vrednosti.',
+    catalogEmptyTitle: 'Katalog je prazen',
+    pdfExportHint:
+      'Namig: Katalog izvozite v PDF za zavarovalnico ali ob selitvi.',
+    dismissHint: 'Razumem',
+    analyzingStepPhoto: 'Analiziram fotografijo…',
+    analyzingStepIdentify: 'Prepoznavam predmet…',
+    analyzingStepPrice: 'Ocenjujem vrednost…',
+    itemDetailsSection: 'Podrobnosti',
+    itemActionsSection: 'Dejanja',
   },
   hr: {
     subtitle: 'Fotografirajte predmet i procijenite njegovu vrijednost',
@@ -546,6 +580,18 @@ export const ui: Record<ContentLocale, UiStrings> = {
     newRoomPlaceholder: 'npr. Šupa, Podrum, Garaža',
     saveRoom: 'Spremi prostor',
     roomNameRequired: 'Unesite naziv prostora.',
+    homeEmptyTitle: 'Skenirajte prvi predmet',
+    homeEmptyMessage:
+      'Fotografirajte bilo što kod kuće — namještaj, elektroniku, kolekcionarske predmete — i dobijte AI procjenu vrijednosti.',
+    catalogEmptyTitle: 'Katalog je prazan',
+    pdfExportHint:
+      'Savjet: Izvezite katalog u PDF za osiguranje ili selidbu.',
+    dismissHint: 'Razumijem',
+    analyzingStepPhoto: 'Analiziram fotografiju…',
+    analyzingStepIdentify: 'Prepoznajem predmet…',
+    analyzingStepPrice: 'Procjenjujem vrijednost…',
+    itemDetailsSection: 'Detalji',
+    itemActionsSection: 'Radnje',
   },
   de: {
     subtitle: 'Fotografieren Sie einen Gegenstand und schätzen Sie den Wert',
@@ -676,6 +722,18 @@ export const ui: Record<ContentLocale, UiStrings> = {
     newRoomPlaceholder: 'z.B. Schuppen, Keller, Kinderzimmer',
     saveRoom: 'Raum speichern',
     roomNameRequired: 'Bitte Raumnamen eingeben.',
+    homeEmptyTitle: 'Ersten Artikel scannen',
+    homeEmptyMessage:
+      'Fotografieren Sie etwas zu Hause — Möbel, Elektronik, Sammlerstücke — und erhalten Sie in Sekunden eine KI-Preisschätzung.',
+    catalogEmptyTitle: 'Ihr Katalog ist leer',
+    pdfExportHint:
+      'Tipp: Exportieren Sie den Katalog als PDF für Versicherung oder Umzug.',
+    dismissHint: 'Verstanden',
+    analyzingStepPhoto: 'Foto wird analysiert…',
+    analyzingStepIdentify: 'Gegenstand wird erkannt…',
+    analyzingStepPrice: 'Wert wird geschätzt…',
+    itemDetailsSection: 'Details',
+    itemActionsSection: 'Aktionen',
   },
 };
 

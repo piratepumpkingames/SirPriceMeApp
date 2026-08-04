@@ -6,6 +6,7 @@
 
 ## Done
 
+- **UX polish batch (6–9):** Shared design language, catalog item detail screen, empty states & hints, analyzing overlay.
 - **Quality-of-life batch:** Save PDF to phone, edit items, mark as sold, delete items, manage custom rooms.
 - **Phase 3 — Catalog PDF:** Export catalog as PDF with disclaimer footer and per-item lines.
 - **Phase 2 — Sell assist:** AI-generated listing title and description on the Sell screen (copy-paste for Bolha, Facebook, etc.).

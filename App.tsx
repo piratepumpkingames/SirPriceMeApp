@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
-  ActivityIndicator,
   Alert,
   Button,
   Image,
@@ -13,6 +12,10 @@ import {
   Text,
   View,
 } from 'react-native';
+import { AnalyzingOverlay } from './components/ui/AnalyzingOverlay';
+import { AppButton } from './components/ui/AppButton';
+import { EmptyState } from './components/ui/EmptyState';
+import { HintBanner } from './components/ui/HintBanner';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { EditItemModal, type ItemEditDraft } from './components/EditItemModal';
 import { ManageRoomsModal } from './components/ManageRoomsModal';
@@ -35,6 +38,10 @@ import {
   type CustomRoom,
 } from './lib/storage/customRooms';
 import {
+  dismissPdfExportHint,
+  isPdfExportHintDismissed,
+} from './lib/storage/hints';
+import {
   isDisclaimerAccepted,
   setDisclaimerAccepted,
 } from './lib/storage/disclaimer';
@@ -47,11 +54,12 @@ import {
   upsertItem,
 } from './lib/storage/items';
 import { CatalogScreen } from './screens/CatalogScreen';
-import { ResultHubScreen } from './screens/ResultHubScreen';
+import { ItemDetailScreen } from './screens/ItemDetailScreen';
 import { SellScreen } from './screens/SellScreen';
 import { createItemFromAnalysis, type ItemRecord } from './types/item';
+import { colors, radii, screenContent, typography } from './lib/theme';
 
-type Screen = 'home' | 'result' | 'sell' | 'catalog';
+type Screen = 'home' | 'result' | 'itemDetail' | 'sell' | 'catalog';
 
 export default function App() {
   const cameraRef = useRef<CameraView>(null);
@@ -72,12 +80,25 @@ export default function App() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMarkSoldModal, setShowMarkSoldModal] = useState(false);
   const [showManageRoomsModal, setShowManageRoomsModal] = useState(false);
+  const [showPdfExportHint, setShowPdfExportHint] = useState(false);
+  const [sellReturnScreen, setSellReturnScreen] = useState<'result' | 'itemDetail'>(
+    'result',
+  );
+  const [catalogReturnScreen, setCatalogReturnScreen] = useState<Screen>('home');
 
   const { regionCode } = getDeviceLocale();
   const contentLocale = resolveContentLocale(languageMode);
   const strings = getStrings(contentLocale);
   const localLanguageLabel = getLocalLanguageLabel();
   const catalogCount = getCatalogItems(catalogItems).length;
+  const analyzingSteps = useMemo(
+    () => [
+      strings.analyzingStepPhoto,
+      strings.analyzingStepIdentify,
+      strings.analyzingStepPrice,
+    ],
+    [strings],
+  );
   const itemCountByRoomId = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const room of customRooms) {
@@ -89,6 +110,9 @@ export default function App() {
   useEffect(() => {
     void refreshCatalog();
     void refreshCustomRooms();
+    void isPdfExportHintDismissed().then((dismissed) => {
+      setShowPdfExportHint(!dismissed);
+    });
   }, []);
 
   async function refreshCatalog() {
@@ -227,7 +251,7 @@ export default function App() {
       if (!updated.forSale) {
         Alert.alert(strings.alsoSellTitle, strings.alsoSellMessage, [
           { text: strings.no, style: 'cancel' },
-          { text: strings.yes, onPress: () => setScreen('sell') },
+          { text: strings.yes, onPress: () => goToSell('result') },
         ]);
       }
     } catch (error) {
@@ -355,7 +379,7 @@ export default function App() {
               await deleteItemById(deletedId);
               await refreshCatalog();
               setCurrentItem(null);
-              setScreen('home');
+              setScreen(screen === 'itemDetail' ? 'catalog' : 'home');
               Alert.alert(strings.itemDeleted);
             })();
           },
@@ -441,24 +465,56 @@ export default function App() {
     return room;
   }
 
+  function goToCatalog(from: Screen) {
+    setCatalogReturnScreen(from);
+    setScreen('catalog');
+  }
+
+  function goToSell(from: 'result' | 'itemDetail') {
+    setSellReturnScreen(from);
+    setScreen('sell');
+  }
+
   function openCatalogItem(item: ItemRecord) {
     setCurrentItem(item);
-    setScreen('result');
+    setScreen('itemDetail');
+  }
+
+  async function handleDismissPdfHint() {
+    await dismissPdfExportHint();
+    setShowPdfExportHint(false);
   }
 
   function renderHome() {
+    const showHomeEmpty = catalogCount === 0 && !photoUri && !isAnalyzing;
+
     return (
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.container}>
           <Text style={styles.title}>SirPriceMe</Text>
           <Text style={styles.subtitle}>{strings.subtitle}</Text>
 
-          <Pressable style={styles.catalogLink} onPress={() => setScreen('catalog')}>
+          <Pressable style={styles.catalogLink} onPress={() => goToCatalog('home')}>
             <Text style={styles.catalogLinkText}>
               {strings.myCatalog}
               {catalogCount > 0 ? ` (${catalogCount})` : ''}
             </Text>
           </Pressable>
+
+          {showHomeEmpty ? (
+            <EmptyState
+              title={strings.homeEmptyTitle}
+              message={strings.homeEmptyMessage}
+            />
+          ) : null}
+
+          {showPdfExportHint && catalogCount > 0 ? (
+            <HintBanner
+              message={strings.pdfExportHint}
+              dismissLabel={strings.dismissHint}
+              onDismiss={() => void handleDismissPdfHint()}
+            />
+          ) : null}
 
           <Text style={styles.languageLabel}>{strings.languageLabel}</Text>
           <View style={styles.languageRow}>
@@ -497,25 +553,27 @@ export default function App() {
           </View>
 
           <View style={styles.buttonRow}>
-            <Button title={strings.takePhoto} onPress={takePhoto} />
+            <AppButton
+              label={strings.takePhoto}
+              onPress={takePhoto}
+              style={styles.fullWidthButton}
+            />
             {photoUri ? (
-              <Button
-                title={isAnalyzing ? strings.analyzing : strings.analyze}
+              <AppButton
+                label={strings.analyze}
                 onPress={analyzePhoto}
                 disabled={isAnalyzing}
+                loading={isAnalyzing}
+                style={styles.fullWidthButton}
               />
             ) : null}
           </View>
 
-          {isAnalyzing ? (
-            <ActivityIndicator size="large" style={styles.loader} />
-          ) : null}
-
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.preview} />
-          ) : (
+          ) : !showHomeEmpty ? (
             <Text style={styles.hint}>{strings.photoHint}</Text>
-          )}
+          ) : null}
 
           {errorMessage ? (
             <Text selectable style={styles.error}>
@@ -531,18 +589,38 @@ export default function App() {
     <>
       {screen === 'home' ? renderHome() : null}
       {screen === 'result' && currentItem ? (
-        <ResultHubScreen
+        <ItemDetailScreen
           item={currentItem}
           locale={contentLocale}
           customRooms={customRooms}
-          onSell={() => setScreen('sell')}
+          mode="scan"
+          onBack={() => setScreen('home')}
+          onSell={() => goToSell('result')}
           onAddToCatalog={() => void beginAddToCatalog()}
           onRemoveFromCatalog={handleRemoveFromCatalog}
           onEdit={() => setShowEditModal(true)}
           onMarkSold={() => setShowMarkSoldModal(true)}
           onUnmarkSold={handleUnmarkSold}
           onDeleteItem={handleDeleteItem}
-          onOpenCatalog={() => setScreen('catalog')}
+          onOpenCatalog={() => goToCatalog('result')}
+          onScanAnother={resetScan}
+        />
+      ) : null}
+      {screen === 'itemDetail' && currentItem ? (
+        <ItemDetailScreen
+          item={currentItem}
+          locale={contentLocale}
+          customRooms={customRooms}
+          mode="catalog"
+          onBack={() => setScreen('catalog')}
+          onSell={() => goToSell('itemDetail')}
+          onAddToCatalog={() => void beginAddToCatalog()}
+          onRemoveFromCatalog={handleRemoveFromCatalog}
+          onEdit={() => setShowEditModal(true)}
+          onMarkSold={() => setShowMarkSoldModal(true)}
+          onUnmarkSold={handleUnmarkSold}
+          onDeleteItem={handleDeleteItem}
+          onOpenCatalog={() => goToCatalog('itemDetail')}
           onScanAnother={resetScan}
         />
       ) : null}
@@ -551,7 +629,7 @@ export default function App() {
           item={currentItem}
           locale={contentLocale}
           regionCode={regionCode}
-          onBack={() => setScreen('result')}
+          onBack={() => setScreen(sellReturnScreen)}
           onMarkListed={() => void handleMarkListed()}
           onUnmarkListed={handleUnmarkListed}
           onMarkSold={() => setShowMarkSoldModal(true)}
@@ -566,7 +644,9 @@ export default function App() {
           items={catalogItems}
           locale={contentLocale}
           customRooms={customRooms}
-          onBack={() => setScreen(currentItem ? 'result' : 'home')}
+          showPdfExportHint={showPdfExportHint}
+          onDismissPdfHint={() => void handleDismissPdfHint()}
+          onBack={() => setScreen(catalogReturnScreen)}
           onSelectItem={openCatalogItem}
           onManageRooms={() => setShowManageRoomsModal(true)}
         />
@@ -610,6 +690,12 @@ export default function App() {
         onClose={() => setShowManageRoomsModal(false)}
       />
 
+      <AnalyzingOverlay
+        visible={isAnalyzing}
+        photoUri={photoUri}
+        steps={analyzingSteps}
+      />
+
       <Modal visible={showCamera} animationType="slide">
         <View style={styles.cameraContainer}>
           <CameraView
@@ -643,19 +729,20 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: screenContent.padding,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: colors.text,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -663,14 +750,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   catalogLinkText: {
-    color: '#1a5fb4',
-    fontSize: 16,
-    fontWeight: '600',
+    ...typography.link,
   },
   languageLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#444',
+    ...typography.label,
     marginBottom: 8,
     alignSelf: 'flex-start',
     width: '100%',
@@ -684,15 +767,15 @@ const styles = StyleSheet.create({
   languageOption: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderColor: colors.border,
+    borderRadius: radii.md,
     paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: 'center',
   },
   languageOptionActive: {
-    borderColor: '#1a5fb4',
-    backgroundColor: '#e8f2ff',
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
   },
   languageOptionText: {
     fontSize: 14,
@@ -700,7 +783,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   languageOptionTextActive: {
-    color: '#1a5fb4',
+    color: colors.primary,
     fontWeight: '700',
   },
   buttonRow: {
@@ -708,22 +791,22 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     width: '100%',
   },
-  loader: {
-    marginBottom: 16,
+  fullWidthButton: {
+    marginBottom: 0,
   },
   preview: {
     width: 280,
     height: 280,
-    borderRadius: 12,
+    borderRadius: radii.xl,
     resizeMode: 'cover',
     marginBottom: 16,
   },
   hint: {
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 14,
   },
   error: {
-    color: '#b00020',
+    color: colors.danger,
     textAlign: 'left',
     marginBottom: 16,
     width: '100%',
@@ -731,7 +814,7 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.black,
   },
   camera: {
     flex: 1,

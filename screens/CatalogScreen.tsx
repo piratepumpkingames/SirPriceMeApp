@@ -10,6 +10,12 @@ import {
   Text,
   View,
 } from 'react-native';
+import { AppButton } from '../components/ui/AppButton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { HintBanner } from '../components/ui/HintBanner';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SectionTitle } from '../components/ui/SectionTitle';
+import { StatusChip } from '../components/ui/StatusChip';
 import {
   CatalogPdfError,
   exportAndShareCatalogPdf,
@@ -18,6 +24,7 @@ import {
 import type { ContentLocale } from '../lib/locale';
 import { formatString, getStrings } from '../lib/locale';
 import { resolveRoomLabel } from '../lib/rooms';
+import { colors, radii, screenContent, typography } from '../lib/theme';
 import type { CustomRoom } from '../lib/storage/customRooms';
 import {
   getCatalogItems,
@@ -31,6 +38,8 @@ type CatalogScreenProps = {
   items: ItemRecord[];
   locale: ContentLocale;
   customRooms: CustomRoom[];
+  showPdfExportHint: boolean;
+  onDismissPdfHint: () => void;
   onBack: () => void;
   onSelectItem: (item: ItemRecord) => void;
   onManageRooms: () => void;
@@ -40,6 +49,8 @@ export function CatalogScreen({
   items,
   locale,
   customRooms,
+  showPdfExportHint,
+  onDismissPdfHint,
   onBack,
   onSelectItem,
   onManageRooms,
@@ -155,11 +166,12 @@ export function CatalogScreen({
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Pressable onPress={handleBack}>
-        <Text style={styles.back}>{strings.back}</Text>
-      </Pressable>
+      <ScreenHeader
+        backLabel={strings.back}
+        title={strings.catalogTitle}
+        onBack={handleBack}
+      />
 
-      <Text style={styles.heading}>{strings.catalogTitle}</Text>
       <Text style={styles.summary}>
         {formatString(strings.catalogSummary, {
           count: catalogItems.length,
@@ -170,6 +182,14 @@ export function CatalogScreen({
       <View style={styles.disclaimerBanner}>
         <Text style={styles.disclaimerText}>{strings.catalogDisclaimer}</Text>
       </View>
+
+      {showPdfExportHint && catalogItems.length > 0 ? (
+        <HintBanner
+          message={strings.pdfExportHint}
+          dismissLabel={strings.dismissHint}
+          onDismiss={onDismissPdfHint}
+        />
+      ) : null}
 
       <View style={styles.pdfRow}>
         <Pressable
@@ -182,7 +202,7 @@ export function CatalogScreen({
           disabled={catalogItems.length === 0 || isSharingPdf}
         >
           {isSharingPdf ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.white} />
           ) : (
             <Text style={styles.exportButtonText}>{strings.sharePdf}</Text>
           )}
@@ -199,7 +219,7 @@ export function CatalogScreen({
             disabled={catalogItems.length === 0 || isSavingPdf}
           >
             {isSavingPdf ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.exportButtonText}>{strings.savePdfToPhone}</Text>
             )}
@@ -208,18 +228,23 @@ export function CatalogScreen({
       </View>
 
       {!selectedRoomId && customRooms.length > 0 ? (
-        <Pressable style={styles.manageRoomsButton} onPress={onManageRooms}>
-          <Text style={styles.manageRoomsText}>{strings.manageRooms}</Text>
-        </Pressable>
+        <AppButton
+          label={strings.manageRooms}
+          variant="secondary"
+          onPress={onManageRooms}
+        />
       ) : null}
 
       {catalogItems.length === 0 ? (
-        <Text style={styles.empty}>{strings.catalogEmpty}</Text>
+        <EmptyState
+          title={strings.catalogEmptyTitle}
+          message={strings.catalogEmpty}
+        />
       ) : selectedRoomId ? (
         <>
-          <Text style={styles.sectionTitle}>
+          <SectionTitle>
             {resolveRoomLabel(selectedRoomId, locale, customRooms)}
-          </Text>
+          </SectionTitle>
           {roomItems.map((item) => (
             <Pressable
               key={item.id}
@@ -232,23 +257,25 @@ export function CatalogScreen({
                 <Text style={styles.itemPrice}>
                   ~€{item.estimatedPriceEUR.toFixed(0)} · {strings.valueSourceAi}
                 </Text>
-                {item.soldAt ? (
-                  <Text style={[styles.itemBadge, styles.soldBadge]}>
-                    {strings.statusSold}
-                  </Text>
-                ) : null}
-                {!item.soldAt && item.forSale ? (
-                  <Text style={styles.itemBadge}>
-                    {item.listedAt ? strings.statusListed : strings.statusForSale}
-                  </Text>
-                ) : null}
+                <View style={styles.badgeRow}>
+                  {item.soldAt ? (
+                    <StatusChip label={strings.statusSold} variant="sold" />
+                  ) : null}
+                  {!item.soldAt && item.forSale ? (
+                    <StatusChip
+                      label={
+                        item.listedAt ? strings.statusListed : strings.statusForSale
+                      }
+                    />
+                  ) : null}
+                </View>
               </View>
             </Pressable>
           ))}
         </>
       ) : (
         <>
-          <Text style={styles.sectionTitle}>{strings.catalogChooseRoom}</Text>
+          <SectionTitle>{strings.catalogChooseRoom}</SectionTitle>
           {roomSummaries.map((room) => (
             <Pressable
               key={room.roomId}
@@ -273,37 +300,23 @@ export function CatalogScreen({
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: 24,
-    paddingBottom: 40,
-  },
-  back: {
-    color: '#1a5fb4',
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
+  content: screenContent,
   summary: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 16,
   },
   disclaimerBanner: {
-    backgroundColor: '#fff8e6',
-    borderRadius: 8,
+    backgroundColor: colors.warningBg,
+    borderRadius: radii.md,
     padding: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#f0d998',
+    borderColor: colors.warningBorder,
   },
   disclaimerText: {
-    fontSize: 13,
-    color: '#6b5a2e',
-    lineHeight: 18,
+    ...typography.hint,
+    color: colors.warningText,
   },
   pdfRow: {
     flexDirection: 'row',
@@ -311,82 +324,56 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   exportButton: {
-    backgroundColor: '#1a5fb4',
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: radii.md,
     paddingVertical: 12,
     alignItems: 'center',
-    marginBottom: 0,
   },
   saveButton: {
-    backgroundColor: '#1a7f37',
-    borderRadius: 8,
+    backgroundColor: colors.success,
+    borderRadius: radii.md,
     paddingVertical: 12,
     alignItems: 'center',
   },
   exportButtonHalf: {
     flex: 1,
-    marginBottom: 0,
   },
   exportButtonDisabled: {
     opacity: 0.55,
   },
   exportButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontWeight: '700',
     fontSize: 15,
-  },
-  manageRoomsButton: {
-    borderColor: '#1a5fb4',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  manageRoomsText: {
-    color: '#1a5fb4',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-    color: '#333',
-  },
-  empty: {
-    color: '#666',
-    fontSize: 15,
-    lineHeight: 22,
   },
   roomRow: {
-    backgroundColor: '#f5f7fb',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     padding: 16,
     marginBottom: 10,
   },
   roomName: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#1a5fb4',
+    color: colors.primary,
     marginBottom: 4,
   },
   roomMeta: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   itemRow: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 12,
-    backgroundColor: '#f5f7fb',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     padding: 10,
   },
   thumb: {
     width: 72,
     height: 72,
-    borderRadius: 8,
+    borderRadius: radii.md,
     resizeMode: 'cover',
   },
   itemMeta: {
@@ -397,19 +384,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
+    color: colors.text,
   },
   itemPrice: {
     fontSize: 14,
-    color: '#1a7f37',
+    color: colors.success,
     fontWeight: '600',
   },
-  itemBadge: {
-    marginTop: 4,
-    fontSize: 12,
-    color: '#1a5fb4',
-    fontWeight: '600',
-  },
-  soldBadge: {
-    color: '#1a7f37',
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
   },
 });

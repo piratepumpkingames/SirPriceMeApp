@@ -11,10 +11,14 @@ import {
   View,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { AppButton } from '../components/ui/AppButton';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SectionTitle } from '../components/ui/SectionTitle';
 import { generateListingText } from '../lib/generateListing';
 import type { ContentLocale } from '../lib/locale';
 import { getStrings } from '../lib/locale';
 import { getMarketplaceLinks } from '../lib/marketplaceLinks';
+import { colors, radii, screenContent, typography } from '../lib/theme';
 import type { ItemRecord } from '../types/item';
 
 type SellScreenProps = {
@@ -83,16 +87,17 @@ export function SellScreen({
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Pressable onPress={onBack}>
-        <Text style={styles.back}>{strings.back}</Text>
-      </Pressable>
+      <ScreenHeader
+        backLabel={strings.back}
+        title={strings.sellTitle}
+        onBack={onBack}
+      />
 
-      <Text style={styles.heading}>{strings.sellTitle}</Text>
       <Image source={{ uri: item.photoUri }} style={styles.preview} />
       <Text style={styles.title}>{item.objectName}</Text>
       <Text style={styles.price}>~€{item.estimatedPriceEUR.toFixed(0)}</Text>
 
-      <Text style={styles.sectionTitle}>{strings.listingAssistTitle}</Text>
+      <SectionTitle>{strings.listingAssistTitle}</SectionTitle>
       <Text style={styles.hint}>{strings.listingAssistHint}</Text>
 
       {hasListing ? (
@@ -121,14 +126,11 @@ export function SellScreen({
             <Text style={styles.copyButtonText}>{strings.copyDescription}</Text>
           </Pressable>
 
-          <Pressable
+          <AppButton
+            label={strings.copyAll}
+            onPress={() => void copyText(`${listingTitle}\n\n${listingDescription}`)}
             style={styles.copyAllButton}
-            onPress={() =>
-              void copyText(`${listingTitle}\n\n${listingDescription}`)
-            }
-          >
-            <Text style={styles.copyAllButtonText}>{strings.copyAll}</Text>
-          </Pressable>
+          />
         </View>
       ) : null}
 
@@ -139,7 +141,7 @@ export function SellScreen({
       >
         {isGenerating ? (
           <View style={styles.generateRow}>
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.white} />
             <Text style={styles.generateButtonText}>
               {strings.generatingListing}
             </Text>
@@ -151,9 +153,7 @@ export function SellScreen({
         )}
       </Pressable>
 
-      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
-        {strings.whereToSell}
-      </Text>
+      <SectionTitle style={styles.sectionTitleSpaced}>{strings.whereToSell}</SectionTitle>
       <Text style={styles.hint}>{strings.marketplaceHint}</Text>
 
       {getMarketplaceLinks(
@@ -161,75 +161,44 @@ export function SellScreen({
         regionCode,
         locale,
       ).map((link) => (
-        <Pressable
+        <AppButton
           key={link.id}
-          style={styles.marketplaceLink}
-          onPress={() => openLink(link.url)}
-        >
-          <Text style={styles.marketplaceLinkText}>{link.label}</Text>
-        </Pressable>
+          label={link.label}
+          variant="secondary"
+          onPress={() => void openLink(link.url)}
+        />
       ))}
 
-      <Pressable
-        style={[
-          styles.markSoldButton,
-          item.soldAt && styles.unmarkSoldButton,
-        ]}
+      <AppButton
+        label={item.soldAt ? strings.unmarkAsSold : strings.markAsSold}
+        variant={item.soldAt ? 'secondary' : 'success'}
         onPress={item.soldAt ? onUnmarkSold : onMarkSold}
-      >
-        <Text
-          style={[
-            styles.markSoldButtonText,
-            item.soldAt && styles.unmarkSoldButtonText,
-          ]}
-        >
-          {item.soldAt ? strings.unmarkAsSold : strings.markAsSold}
-        </Text>
-      </Pressable>
+        style={styles.topSpaced}
+      />
 
       {!item.soldAt ? (
-        <Pressable
-          style={[
-            styles.markListedButton,
-            item.forSale && item.listedAt && styles.unmarkListedButton,
-          ]}
-          onPress={item.forSale && item.listedAt ? onUnmarkListed : onMarkListed}
-        >
-          <Text
-            style={[
-              styles.markListedButtonText,
-              item.forSale && item.listedAt && styles.unmarkListedButtonText,
-            ]}
-          >
-            {item.forSale && item.listedAt
+        <AppButton
+          label={
+            item.forSale && item.listedAt
               ? strings.unmarkAsListed
-              : strings.markAsListed}
-          </Text>
-        </Pressable>
+              : strings.markAsListed
+          }
+          variant={item.forSale && item.listedAt ? 'danger' : 'primary'}
+          onPress={
+            item.forSale && item.listedAt ? onUnmarkListed : onMarkListed
+          }
+        />
       ) : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: 24,
-    paddingBottom: 40,
-  },
-  back: {
-    color: '#1a5fb4',
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
+  content: screenContent,
   preview: {
     width: '100%',
     height: 200,
-    borderRadius: 12,
+    borderRadius: radii.xl,
     resizeMode: 'cover',
     marginBottom: 12,
   },
@@ -237,37 +206,28 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 4,
+    color: colors.text,
   },
   price: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1a7f37',
+    color: colors.success,
     marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#222',
-    marginBottom: 4,
-  },
-  sectionTitleSpaced: {
-    marginTop: 8,
-  },
   hint: {
-    fontSize: 13,
-    color: '#666',
+    ...typography.hint,
     marginBottom: 12,
   },
   listingBlock: {
-    backgroundColor: '#f6f8fa',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radii.lg,
     padding: 14,
     marginBottom: 12,
   },
   fieldLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#666',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: 6,
@@ -276,38 +236,28 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   listingText: {
-    fontSize: 15,
-    color: '#222',
-    lineHeight: 22,
+    ...typography.body,
   },
   copyButton: {
     alignSelf: 'flex-start',
     marginTop: 8,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 6,
-    backgroundColor: '#e8f0fe',
+    borderRadius: radii.sm,
+    backgroundColor: colors.primaryLight,
   },
   copyButtonText: {
-    color: '#1a5fb4',
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '600',
   },
   copyAllButton: {
     marginTop: 12,
-    backgroundColor: '#1a5fb4',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  copyAllButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
+    marginBottom: 0,
   },
   generateButton: {
-    backgroundColor: '#1a7f37',
-    borderRadius: 8,
+    backgroundColor: colors.success,
+    borderRadius: radii.md,
     paddingVertical: 14,
     alignItems: 'center',
     marginBottom: 8,
@@ -321,63 +271,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   generateButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '700',
   },
-  marketplaceLink: {
-    backgroundColor: '#fff',
-    borderColor: '#1a5fb4',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 8,
+  sectionTitleSpaced: {
+    marginTop: 8,
   },
-  marketplaceLinkText: {
-    color: '#1a5fb4',
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  markListedButton: {
+  topSpaced: {
     marginTop: 16,
-    backgroundColor: '#1a5fb4',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  markSoldButton: {
-    marginTop: 16,
-    backgroundColor: '#1a7f37',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  unmarkSoldButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#1a7f37',
-  },
-  markSoldButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  unmarkSoldButtonText: {
-    color: '#1a7f37',
-  },
-  unmarkListedButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#b00020',
-  },
-  markListedButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  unmarkListedButtonText: {
-    color: '#b00020',
   },
 });
