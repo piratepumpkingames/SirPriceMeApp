@@ -24,6 +24,8 @@ type SellScreenProps = {
   onBack: () => void;
   onMarkListed: () => void;
   onUnmarkListed: () => void;
+  onMarkSold: () => void;
+  onUnmarkSold: () => void;
   onListingSaved: (listingTitle: string, listingDescription: string) => void;
 };
 
@@ -34,6 +36,8 @@ export function SellScreen({
   onBack,
   onMarkListed,
   onUnmarkListed,
+  onMarkSold,
+  onUnmarkSold,
   onListingSaved,
 }: SellScreenProps) {
   const strings = getStrings(locale);
@@ -168,22 +172,41 @@ export function SellScreen({
 
       <Pressable
         style={[
-          styles.markListedButton,
-          item.forSale && item.listedAt && styles.unmarkListedButton,
+          styles.markSoldButton,
+          item.soldAt && styles.unmarkSoldButton,
         ]}
-        onPress={item.forSale && item.listedAt ? onUnmarkListed : onMarkListed}
+        onPress={item.soldAt ? onUnmarkSold : onMarkSold}
       >
         <Text
           style={[
-            styles.markListedButtonText,
-            item.forSale && item.listedAt && styles.unmarkListedButtonText,
+            styles.markSoldButtonText,
+            item.soldAt && styles.unmarkSoldButtonText,
           ]}
         >
-          {item.forSale && item.listedAt
-            ? strings.unmarkAsListed
-            : strings.markAsListed}
+          {item.soldAt ? strings.unmarkAsSold : strings.markAsSold}
         </Text>
       </Pressable>
+
+      {!item.soldAt ? (
+        <Pressable
+          style={[
+            styles.markListedButton,
+            item.forSale && item.listedAt && styles.unmarkListedButton,
+          ]}
+          onPress={item.forSale && item.listedAt ? onUnmarkListed : onMarkListed}
+        >
+          <Text
+            style={[
+              styles.markListedButtonText,
+              item.forSale && item.listedAt && styles.unmarkListedButtonText,
+            ]}
+          >
+            {item.forSale && item.listedAt
+              ? strings.unmarkAsListed
+              : strings.markAsListed}
+          </Text>
+        </Pressable>
+      ) : null}
     </ScrollView>
   );
 }
@@ -323,6 +346,26 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
+  },
+  markSoldButton: {
+    marginTop: 16,
+    backgroundColor: '#1a7f37',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  unmarkSoldButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#1a7f37',
+  },
+  markSoldButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  unmarkSoldButtonText: {
+    color: '#1a7f37',
   },
   unmarkListedButton: {
     backgroundColor: '#fff',

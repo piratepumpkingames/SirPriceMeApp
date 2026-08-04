@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
@@ -14,6 +14,9 @@ import {
   View,
 } from 'react-native';
 import { DisclaimerModal } from './components/DisclaimerModal';
+import { EditItemModal, type ItemEditDraft } from './components/EditItemModal';
+import { ManageRoomsModal } from './components/ManageRoomsModal';
+import { MarkSoldModal } from './components/MarkSoldModal';
 import { RoomPickerModal } from './components/RoomPickerModal';
 import { analyzeItemPhoto } from './lib/analyzeItem';
 import {
@@ -26,7 +29,9 @@ import {
 } from './lib/locale';
 import {
   addCustomRoom,
+  deleteCustomRoom,
   loadCustomRooms,
+  updateCustomRoom,
   type CustomRoom,
 } from './lib/storage/customRooms';
 import {
@@ -34,6 +39,8 @@ import {
   setDisclaimerAccepted,
 } from './lib/storage/disclaimer';
 import {
+  countItemsInRoom,
+  deleteItemById,
   getCatalogItems,
   loadItems,
   persistPhotoUri,
@@ -62,12 +69,22 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showRoomPicker, setShowRoomPicker] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showMarkSoldModal, setShowMarkSoldModal] = useState(false);
+  const [showManageRoomsModal, setShowManageRoomsModal] = useState(false);
 
   const { regionCode } = getDeviceLocale();
   const contentLocale = resolveContentLocale(languageMode);
   const strings = getStrings(contentLocale);
   const localLanguageLabel = getLocalLanguageLabel();
   const catalogCount = getCatalogItems(catalogItems).length;
+  const itemCountByRoomId = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const room of customRooms) {
+      counts[room.id] = countItemsInRoom(catalogItems, room.id);
+    }
+    return counts;
+  }, [catalogItems, customRooms]);
 
   useEffect(() => {
     void refreshCatalog();
@@ -256,6 +273,111 @@ export default function App() {
     setCurrentItem(updated);
   }
 
+  async function handleEditSave(draft: ItemEditDraft) {
+    if (!currentItem) {
+      return;
+    }
+
+    const updated = await saveItem({
+      ...currentItem,
+      objectName: draft.objectName,
+      condition: draft.condition,
+      estimatedPriceEUR: draft.estimatedPriceEUR,
+      explanation: draft.explanation,
+      userNotes: draft.userNotes,
+    });
+    setCurrentItem(updated);
+    setShowEditModal(false);
+    Alert.alert(strings.itemUpdated);
+  }
+
+  async function handleMarkSoldConfirm(soldPriceEUR: number) {
+    if (!currentItem) {
+      return;
+    }
+
+    const updated = await saveItem({
+      ...currentItem,
+      soldAt: new Date().toISOString(),
+      soldPriceEUR,
+      forSale: false,
+      listedAt: null,
+    });
+    setCurrentItem(updated);
+    setShowMarkSoldModal(false);
+    Alert.alert(strings.markedAsSold);
+  }
+
+  function handleUnmarkSold() {
+    if (!currentItem) {
+      return;
+    }
+
+    Alert.alert(
+      strings.unmarkAsSoldConfirmTitle,
+      strings.unmarkAsSoldConfirmMessage,
+      [
+        { text: strings.cancel, style: 'cancel' },
+        {
+          text: strings.confirm,
+          onPress: () => {
+            void (async () => {
+              const updated = await saveItem({
+                ...currentItem,
+                soldAt: null,
+                soldPriceEUR: null,
+              });
+              setCurrentItem(updated);
+              Alert.alert(strings.unmarkedAsSold);
+            })();
+          },
+        },
+      ],
+    );
+  }
+
+  function handleDeleteItem() {
+    if (!currentItem) {
+      return;
+    }
+
+    Alert.alert(
+      strings.deleteItemConfirmTitle,
+      strings.deleteItemConfirmMessage,
+      [
+        { text: strings.cancel, style: 'cancel' },
+        {
+          text: strings.deleteItem,
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              const deletedId = currentItem.id;
+              await deleteItemById(deletedId);
+              await refreshCatalog();
+              setCurrentItem(null);
+              setScreen('home');
+              Alert.alert(strings.itemDeleted);
+            })();
+          },
+        },
+      ],
+    );
+  }
+
+  async function handleRenameRoom(roomId: string, label: string) {
+    await updateCustomRoom(roomId, label);
+    await refreshCustomRooms();
+  }
+
+  async function handleDeleteRoom(roomId: string) {
+    if (countItemsInRoom(catalogItems, roomId) > 0) {
+      throw new Error(strings.roomNotEmpty);
+    }
+
+    await deleteCustomRoom(roomId);
+    await refreshCustomRooms();
+  }
+
   function handleRemoveFromCatalog() {
     if (!currentItem) {
       return;
@@ -416,6 +538,10 @@ export default function App() {
           onSell={() => setScreen('sell')}
           onAddToCatalog={() => void beginAddToCatalog()}
           onRemoveFromCatalog={handleRemoveFromCatalog}
+          onEdit={() => setShowEditModal(true)}
+          onMarkSold={() => setShowMarkSoldModal(true)}
+          onUnmarkSold={handleUnmarkSold}
+          onDeleteItem={handleDeleteItem}
           onOpenCatalog={() => setScreen('catalog')}
           onScanAnother={resetScan}
         />
@@ -428,6 +554,8 @@ export default function App() {
           onBack={() => setScreen('result')}
           onMarkListed={() => void handleMarkListed()}
           onUnmarkListed={handleUnmarkListed}
+          onMarkSold={() => setShowMarkSoldModal(true)}
+          onUnmarkSold={handleUnmarkSold}
           onListingSaved={(title, description) =>
             void handleListingSaved(title, description)
           }
@@ -440,6 +568,7 @@ export default function App() {
           customRooms={customRooms}
           onBack={() => setScreen(currentItem ? 'result' : 'home')}
           onSelectItem={openCatalogItem}
+          onManageRooms={() => setShowManageRoomsModal(true)}
         />
       ) : null}
 
@@ -456,6 +585,29 @@ export default function App() {
         onSelect={(roomId) => void handleRoomSelect(roomId)}
         onCreateCustomRoom={handleCreateCustomRoom}
         onCancel={() => setShowRoomPicker(false)}
+      />
+      <EditItemModal
+        visible={showEditModal}
+        item={currentItem}
+        locale={contentLocale}
+        onSave={(draft) => void handleEditSave(draft)}
+        onCancel={() => setShowEditModal(false)}
+      />
+      <MarkSoldModal
+        visible={showMarkSoldModal}
+        item={currentItem}
+        locale={contentLocale}
+        onConfirm={(price) => void handleMarkSoldConfirm(price)}
+        onCancel={() => setShowMarkSoldModal(false)}
+      />
+      <ManageRoomsModal
+        visible={showManageRoomsModal}
+        locale={contentLocale}
+        customRooms={customRooms}
+        itemCountByRoomId={itemCountByRoomId}
+        onRenameRoom={handleRenameRoom}
+        onDeleteRoom={handleDeleteRoom}
+        onClose={() => setShowManageRoomsModal(false)}
       />
 
       <Modal visible={showCamera} animationType="slide">

@@ -39,10 +39,47 @@ type UiStrings = {
   catalogEmpty: string;
   catalogDisclaimer: string;
   exportPdf: string;
+  sharePdf: string;
+  savePdfToPhone: string;
+  savingPdf: string;
+  pdfSavedToPhone: string;
+  pdfSaveCancelled: string;
   exportingPdf: string;
   exportPdfFailedTitle: string;
   pdfExportedOn: string;
   pdfUnassignedRoom: string;
+  editItem: string;
+  editItemTitle: string;
+  saveChanges: string;
+  itemNameLabel: string;
+  itemNameRequired: string;
+  priceLabel: string;
+  invalidPrice: string;
+  itemUpdated: string;
+  markAsSold: string;
+  markAsSoldTitle: string;
+  soldPriceLabel: string;
+  soldPriceHint: string;
+  markedAsSold: string;
+  statusSold: string;
+  unmarkAsSold: string;
+  unmarkAsSoldConfirmTitle: string;
+  unmarkAsSoldConfirmMessage: string;
+  unmarkedAsSold: string;
+  deleteItem: string;
+  deleteItemConfirmTitle: string;
+  deleteItemConfirmMessage: string;
+  itemDeleted: string;
+  manageRooms: string;
+  manageRoomsHint: string;
+  renameRoom: string;
+  deleteRoom: string;
+  deleteRoomConfirmTitle: string;
+  deleteRoomConfirmMessage: string;
+  roomNotEmpty: string;
+  roomRenamed: string;
+  roomDeleted: string;
+  noCustomRooms: string;
   sellTitle: string;
   listingAssistTitle: string;
   listingAssistHint: string;
@@ -158,10 +195,48 @@ export const ui: Record<ContentLocale, UiStrings> = {
     catalogDisclaimer:
       'Estimates only. For insurance or legal use, confirm values with your insurer or a qualified appraiser.',
     exportPdf: 'Export PDF',
+    sharePdf: 'Share PDF',
+    savePdfToPhone: 'Save to phone',
+    savingPdf: 'Saving PDF...',
+    pdfSavedToPhone: 'PDF saved to your chosen folder.',
+    pdfSaveCancelled: 'Save cancelled.',
     exportingPdf: 'Creating PDF...',
     exportPdfFailedTitle: 'Export failed',
     pdfExportedOn: 'Exported on {date}',
     pdfUnassignedRoom: 'Unassigned',
+    editItem: 'Edit details',
+    editItemTitle: 'Edit item',
+    saveChanges: 'Save changes',
+    itemNameLabel: 'Item name',
+    itemNameRequired: 'Please enter an item name.',
+    priceLabel: 'Estimated price (EUR)',
+    invalidPrice: 'Please enter a valid price.',
+    itemUpdated: 'Item updated.',
+    markAsSold: 'Mark as sold',
+    markAsSoldTitle: 'Mark as sold',
+    soldPriceLabel: 'Sold for (EUR)',
+    soldPriceHint: 'Enter the price you sold it for, or keep the estimate.',
+    markedAsSold: 'Marked as sold.',
+    statusSold: 'Sold',
+    unmarkAsSold: 'Unmark as sold',
+    unmarkAsSoldConfirmTitle: 'Unmark as sold?',
+    unmarkAsSoldConfirmMessage: 'This item will no longer be marked as sold.',
+    unmarkedAsSold: 'Unmarked as sold.',
+    deleteItem: 'Delete item',
+    deleteItemConfirmTitle: 'Delete item?',
+    deleteItemConfirmMessage:
+      'This removes the item and its photo from the app. This cannot be undone.',
+    itemDeleted: 'Item deleted.',
+    manageRooms: 'Manage custom rooms',
+    manageRoomsHint: 'Rename or delete rooms you created. Empty rooms only.',
+    renameRoom: 'Rename',
+    deleteRoom: 'Delete',
+    deleteRoomConfirmTitle: 'Delete room?',
+    deleteRoomConfirmMessage: 'This custom room will be removed from the picker.',
+    roomNotEmpty: 'Move or remove catalog items from this room first.',
+    roomRenamed: 'Room renamed.',
+    roomDeleted: 'Room deleted.',
+    noCustomRooms: 'No custom rooms yet.',
     sellTitle: 'Sell this item',
     listingAssistTitle: 'Listing text',
     listingAssistHint: 'Copy and paste into Bolha, Facebook Marketplace, or similar.',
@@ -240,8 +315,8 @@ export const ui: Record<ContentLocale, UiStrings> = {
     statusInCatalog: 'V katalogu',
     statusForSale: 'Za prodajo',
     statusListed: 'Objavljeno',
-    pickRoom: 'Izberi sobo',
-    pickRoomHint: 'Predmete združite po sobah za domači inventar.',
+    pickRoom: 'Izberi prostor',
+    pickRoomHint: 'Predmete združite po prostorih za domači inventar.',
     saveToCatalog: 'Shrani v katalog',
     savedToCatalog: 'Shranjeno v katalog',
     catalogTitle: 'Moj domači katalog',
@@ -250,10 +325,48 @@ export const ui: Record<ContentLocale, UiStrings> = {
     catalogDisclaimer:
       'Samo ocene. Za zavarovanje ali pravne namene preverite vrednosti pri zavarovalnici ali ocenjevalcu.',
     exportPdf: 'Izvozi PDF',
+    sharePdf: 'Deli PDF',
+    savePdfToPhone: 'Shrani v telefon',
+    savingPdf: 'Shranjujem PDF...',
+    pdfSavedToPhone: 'PDF shranjen v izbrano mapo.',
+    pdfSaveCancelled: 'Shranjevanje preklicano.',
     exportingPdf: 'Pripravljam PDF...',
     exportPdfFailedTitle: 'Izvoz ni uspel',
     pdfExportedOn: 'Izvoženo {date}',
     pdfUnassignedRoom: 'Nedodeljeno',
+    editItem: 'Uredi podatke',
+    editItemTitle: 'Uredi predmet',
+    saveChanges: 'Shrani spremembe',
+    itemNameLabel: 'Ime predmeta',
+    itemNameRequired: 'Vnesite ime predmeta.',
+    priceLabel: 'Ocenjena cena (EUR)',
+    invalidPrice: 'Vnesite veljavno ceno.',
+    itemUpdated: 'Predmet posodobljen.',
+    markAsSold: 'Označi kot prodano',
+    markAsSoldTitle: 'Označi kot prodano',
+    soldPriceLabel: 'Prodano za (EUR)',
+    soldPriceHint: 'Vnesite prodajno ceno ali obdržite oceno.',
+    markedAsSold: 'Označeno kot prodano.',
+    statusSold: 'Prodano',
+    unmarkAsSold: 'Odstrani oznako prodano',
+    unmarkAsSoldConfirmTitle: 'Odstranim oznako prodano?',
+    unmarkAsSoldConfirmMessage: 'Predmet ne bo več označen kot prodan.',
+    unmarkedAsSold: 'Oznaka prodano odstranjena.',
+    deleteItem: 'Izbriši predmet',
+    deleteItemConfirmTitle: 'Izbrišem predmet?',
+    deleteItemConfirmMessage:
+      'Predmet in fotografija bosta odstranjena iz aplikacije. Tega ni mogoče razveljaviti.',
+    itemDeleted: 'Predmet izbrisan.',
+    manageRooms: 'Upravljaj prostore',
+    manageRoomsHint: 'Preimenujte ali izbrišite svoje prostore. Samo prazni prostori.',
+    renameRoom: 'Preimenuj',
+    deleteRoom: 'Izbriši',
+    deleteRoomConfirmTitle: 'Izbrišem prostor?',
+    deleteRoomConfirmMessage: 'Ta prostor bo odstranjen s seznama.',
+    roomNotEmpty: 'Najprej premaknite ali odstranite predmete iz tega prostora.',
+    roomRenamed: 'Prostor preimenovan.',
+    roomDeleted: 'Prostor izbrisan.',
+    noCustomRooms: 'Ni še lastnih prostorov.',
     sellTitle: 'Prodaj predmet',
     listingAssistTitle: 'Besedilo oglasa',
     listingAssistHint: 'Kopirajte in prilepite na Bolho, Facebook Marketplace ipd.',
@@ -293,16 +406,16 @@ export const ui: Record<ContentLocale, UiStrings> = {
     unmarkAsListedConfirmMessage:
       'Predmet ne bo več označen kot objavljen za prodajo.',
     unmarkedAsListed: 'Oznaka objavljeno odstranjena',
-    catalogChooseRoom: 'Izberi sobo',
+    catalogChooseRoom: 'Izberi prostor',
     roomItemCount: '{count} predmetov · ~€{total}',
     confirm: 'Potrdi',
     cancel: 'Prekliči',
-    newRoom: '+ Nova soba',
-    newRoomTitle: 'Nova soba',
-    newRoomHint: 'Vnesite ime, ki ga boste poznali tudi kasneje.',
-    newRoomPlaceholder: 'npr. Lopa, Klet, Otroška soba',
-    saveRoom: 'Shrani sobo',
-    roomNameRequired: 'Vnesite ime sobe.',
+    newRoom: '+ Nov prostor',
+    newRoomTitle: 'Nov prostor',
+    newRoomHint: 'Vnesite ime prostora, ki ga boste poznali tudi kasneje.',
+    newRoomPlaceholder: 'npr. Lopa, Klet, Shramba',
+    saveRoom: 'Shrani prostor',
+    roomNameRequired: 'Vnesite ime prostora.',
   },
   hr: {
     subtitle: 'Fotografirajte predmet i procijenite njegovu vrijednost',
@@ -332,8 +445,8 @@ export const ui: Record<ContentLocale, UiStrings> = {
     statusInCatalog: 'U katalogu',
     statusForSale: 'Na prodaju',
     statusListed: 'Objavljeno',
-    pickRoom: 'Odaberi sobu',
-    pickRoomHint: 'Grupirajte predmete po sobama za inventar doma.',
+    pickRoom: 'Odaberi prostor',
+    pickRoomHint: 'Grupirajte predmete po prostorima za inventar doma.',
     saveToCatalog: 'Spremi u katalog',
     savedToCatalog: 'Spremljeno u katalog',
     catalogTitle: 'Inventar mog doma',
@@ -342,10 +455,48 @@ export const ui: Record<ContentLocale, UiStrings> = {
     catalogDisclaimer:
       'Samo procjene. Za osiguranje ili pravne svrhe potvrdite vrijednosti s osiguravateljem.',
     exportPdf: 'Izvezi PDF',
+    sharePdf: 'Podijeli PDF',
+    savePdfToPhone: 'Spremi na telefon',
+    savingPdf: 'Spremanje PDF-a...',
+    pdfSavedToPhone: 'PDF spremljen u odabranu mapu.',
+    pdfSaveCancelled: 'Spremanje otkazano.',
     exportingPdf: 'Pripremam PDF...',
     exportPdfFailedTitle: 'Izvoz nije uspio',
     pdfExportedOn: 'Izvezeno {date}',
     pdfUnassignedRoom: 'Nedodijeljeno',
+    editItem: 'Uredi podatke',
+    editItemTitle: 'Uredi predmet',
+    saveChanges: 'Spremi promjene',
+    itemNameLabel: 'Naziv predmeta',
+    itemNameRequired: 'Unesite naziv predmeta.',
+    priceLabel: 'Procijenjena cijena (EUR)',
+    invalidPrice: 'Unesite valjanu cijenu.',
+    itemUpdated: 'Predmet ažuriran.',
+    markAsSold: 'Označi kao prodano',
+    markAsSoldTitle: 'Označi kao prodano',
+    soldPriceLabel: 'Prodano za (EUR)',
+    soldPriceHint: 'Unesite prodajnu cijenu ili zadržite procjenu.',
+    markedAsSold: 'Označeno kao prodano.',
+    statusSold: 'Prodano',
+    unmarkAsSold: 'Ukloni oznaku prodano',
+    unmarkAsSoldConfirmTitle: 'Ukloniti oznaku prodano?',
+    unmarkAsSoldConfirmMessage: 'Predmet više neće biti označen kao prodan.',
+    unmarkedAsSold: 'Oznaka prodano uklonjena.',
+    deleteItem: 'Obriši predmet',
+    deleteItemConfirmTitle: 'Obrisati predmet?',
+    deleteItemConfirmMessage:
+      'Predmet i fotografija bit će uklonjeni iz aplikacije. Ovo se ne može poništiti.',
+    itemDeleted: 'Predmet obrisan.',
+    manageRooms: 'Upravljaj prostore',
+    manageRoomsHint: 'Preimenujte ili obrišite svoje prostore. Samo prazni prostori.',
+    renameRoom: 'Preimenuj',
+    deleteRoom: 'Obriši',
+    deleteRoomConfirmTitle: 'Obrisati prostor?',
+    deleteRoomConfirmMessage: 'Ovaj prostor bit će uklonjen s popisa.',
+    roomNotEmpty: 'Prvo premjestite ili uklonite predmete iz ovog prostora.',
+    roomRenamed: 'Prostor preimenovan.',
+    roomDeleted: 'Prostor obrisan.',
+    noCustomRooms: 'Još nema vlastitih prostora.',
     sellTitle: 'Prodaj predmet',
     listingAssistTitle: 'Tekst oglasa',
     listingAssistHint: 'Kopirajte i zalijepite na Njuškalo, Facebook Marketplace itd.',
@@ -385,16 +536,16 @@ export const ui: Record<ContentLocale, UiStrings> = {
     unmarkAsListedConfirmMessage:
       'Predmet više neće biti označen kao objavljen na prodaju.',
     unmarkedAsListed: 'Oznaka objavljeno uklonjena',
-    catalogChooseRoom: 'Odaberi sobu',
+    catalogChooseRoom: 'Odaberi prostor',
     roomItemCount: '{count} predmeta · ~€{total}',
     confirm: 'Potvrdi',
     cancel: 'Odustani',
-    newRoom: '+ Nova soba',
-    newRoomTitle: 'Nova soba',
-    newRoomHint: 'Unesite naziv koji ćete kasnije prepoznati.',
-    newRoomPlaceholder: 'npr. Šupa, Podrum, Dječja soba',
-    saveRoom: 'Spremi sobu',
-    roomNameRequired: 'Unesite naziv sobe.',
+    newRoom: '+ Novi prostor',
+    newRoomTitle: 'Novi prostor',
+    newRoomHint: 'Unesite naziv prostora koji ćete kasnije prepoznati.',
+    newRoomPlaceholder: 'npr. Šupa, Podrum, Garaža',
+    saveRoom: 'Spremi prostor',
+    roomNameRequired: 'Unesite naziv prostora.',
   },
   de: {
     subtitle: 'Fotografieren Sie einen Gegenstand und schätzen Sie den Wert',
@@ -434,10 +585,48 @@ export const ui: Record<ContentLocale, UiStrings> = {
     catalogDisclaimer:
       'Nur Schätzungen. Für Versicherung oder Rechtliches Werte beim Versicherer prüfen.',
     exportPdf: 'PDF exportieren',
+    sharePdf: 'PDF teilen',
+    savePdfToPhone: 'Auf Handy speichern',
+    savingPdf: 'PDF wird gespeichert...',
+    pdfSavedToPhone: 'PDF im gewählten Ordner gespeichert.',
+    pdfSaveCancelled: 'Speichern abgebrochen.',
     exportingPdf: 'PDF wird erstellt...',
     exportPdfFailedTitle: 'Export fehlgeschlagen',
     pdfExportedOn: 'Exportiert am {date}',
     pdfUnassignedRoom: 'Nicht zugeordnet',
+    editItem: 'Details bearbeiten',
+    editItemTitle: 'Artikel bearbeiten',
+    saveChanges: 'Änderungen speichern',
+    itemNameLabel: 'Artikelname',
+    itemNameRequired: 'Bitte Artikelnamen eingeben.',
+    priceLabel: 'Geschätzter Preis (EUR)',
+    invalidPrice: 'Bitte gültigen Preis eingeben.',
+    itemUpdated: 'Artikel aktualisiert.',
+    markAsSold: 'Als verkauft markieren',
+    markAsSoldTitle: 'Als verkauft markieren',
+    soldPriceLabel: 'Verkauft für (EUR)',
+    soldPriceHint: 'Verkaufspreis eingeben oder Schätzung behalten.',
+    markedAsSold: 'Als verkauft markiert.',
+    statusSold: 'Verkauft',
+    unmarkAsSold: 'Als verkauft entfernen',
+    unmarkAsSoldConfirmTitle: 'Als verkauft entfernen?',
+    unmarkAsSoldConfirmMessage: 'Der Artikel wird nicht mehr als verkauft markiert.',
+    unmarkedAsSold: 'Als verkauft entfernt.',
+    deleteItem: 'Artikel löschen',
+    deleteItemConfirmTitle: 'Artikel löschen?',
+    deleteItemConfirmMessage:
+      'Artikel und Foto werden aus der App entfernt. Dies kann nicht rückgängig gemacht werden.',
+    itemDeleted: 'Artikel gelöscht.',
+    manageRooms: 'Eigene Räume verwalten',
+    manageRoomsHint: 'Räume umbenennen oder löschen. Nur leere Räume.',
+    renameRoom: 'Umbenennen',
+    deleteRoom: 'Löschen',
+    deleteRoomConfirmTitle: 'Raum löschen?',
+    deleteRoomConfirmMessage: 'Dieser Raum wird aus der Auswahl entfernt.',
+    roomNotEmpty: 'Entfernen Sie zuerst alle Artikel aus diesem Raum.',
+    roomRenamed: 'Raum umbenannt.',
+    roomDeleted: 'Raum gelöscht.',
+    noCustomRooms: 'Noch keine eigenen Räume.',
     sellTitle: 'Artikel verkaufen',
     listingAssistTitle: 'Anzeigentext',
     listingAssistHint: 'Kopieren und in Kleinanzeigen, Facebook Marketplace usw. einfügen.',

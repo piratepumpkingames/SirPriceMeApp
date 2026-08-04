@@ -6,6 +6,7 @@
 
 ## Done
 
+- **Quality-of-life batch:** Save PDF to phone, edit items, mark as sold, delete items, manage custom rooms.
 - **Phase 3 — Catalog PDF:** Export catalog as PDF with disclaimer footer and per-item lines.
 - **Phase 2 — Sell assist:** AI-generated listing title and description on the Sell screen (copy-paste for Bolha, Facebook, etc.).
 
@@ -26,5 +27,4 @@ Ask in a chat: *"remind me about the backend proxy for the Gemini key"* — this
 ## Later (optional)
 
 - Richer marketplace search terms (synonyms, local phrasing).
-- Edit/delete custom rooms.
 - Branch strategy for bigger feature experiments.

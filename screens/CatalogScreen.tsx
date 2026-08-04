@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,6 +13,7 @@ import {
 import {
   CatalogPdfError,
   exportAndShareCatalogPdf,
+  saveCatalogPdfToDevice,
 } from '../lib/exportCatalogPdf';
 import type { ContentLocale } from '../lib/locale';
 import { formatString, getStrings } from '../lib/locale';
@@ -31,6 +33,7 @@ type CatalogScreenProps = {
   customRooms: CustomRoom[];
   onBack: () => void;
   onSelectItem: (item: ItemRecord) => void;
+  onManageRooms: () => void;
 };
 
 export function CatalogScreen({
@@ -39,10 +42,33 @@ export function CatalogScreen({
   customRooms,
   onBack,
   onSelectItem,
+  onManageRooms,
 }: CatalogScreenProps) {
   const strings = getStrings(locale);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isSharingPdf, setIsSharingPdf] = useState(false);
+  const [isSavingPdf, setIsSavingPdf] = useState(false);
+
+  const pdfStrings = useMemo(
+    () => ({
+      catalogTitle: strings.catalogTitle,
+      catalogSummary: strings.catalogSummary,
+      catalogDisclaimer: strings.catalogDisclaimer,
+      disclaimerTitle: strings.disclaimerTitle,
+      disclaimerBody: strings.disclaimerBody,
+      condition: strings.condition,
+      valueSourceAi: strings.valueSourceAi,
+      notesLabel: strings.notesLabel,
+      pdfExportedOn: strings.pdfExportedOn,
+      pdfUnassignedRoom: strings.pdfUnassignedRoom,
+      statusForSale: strings.statusForSale,
+      statusListed: strings.statusListed,
+      statusSold: strings.statusSold,
+      exportPdf: strings.sharePdf,
+      savePdfToPhone: strings.savePdfToPhone,
+    }),
+    [strings],
+  );
 
   const catalogItems = getCatalogItems(items);
   const total = getCatalogTotalEUR(items);
@@ -63,47 +89,67 @@ export function CatalogScreen({
     onBack();
   }
 
-  async function handleExportPdf() {
+  async function handleSharePdf() {
     if (catalogItems.length === 0) {
-      Alert.alert(strings.exportPdf, strings.catalogEmpty);
+      Alert.alert(strings.sharePdf, strings.catalogEmpty);
       return;
     }
 
-    setIsExporting(true);
+    setIsSharingPdf(true);
 
     try {
       await exportAndShareCatalogPdf({
         items,
         locale,
         customRooms,
-        strings: {
-          catalogTitle: strings.catalogTitle,
-          catalogSummary: strings.catalogSummary,
-          catalogDisclaimer: strings.catalogDisclaimer,
-          disclaimerTitle: strings.disclaimerTitle,
-          disclaimerBody: strings.disclaimerBody,
-          condition: strings.condition,
-          valueSourceAi: strings.valueSourceAi,
-          notesLabel: strings.notesLabel,
-          pdfExportedOn: strings.pdfExportedOn,
-          pdfUnassignedRoom: strings.pdfUnassignedRoom,
-          statusForSale: strings.statusForSale,
-          statusListed: strings.statusListed,
-          exportPdf: strings.exportPdf,
-        },
+        strings: pdfStrings,
       });
     } catch (error) {
       if (error instanceof CatalogPdfError && error.code === 'EMPTY_CATALOG') {
-        Alert.alert(strings.exportPdf, strings.catalogEmpty);
+        Alert.alert(strings.sharePdf, strings.catalogEmpty);
         return;
       }
 
       const message =
         error instanceof Error ? error.message : strings.genericError;
-      console.error('Catalog PDF export failed:', error);
+      console.error('Catalog PDF share failed:', error);
       Alert.alert(strings.exportPdfFailedTitle, message);
     } finally {
-      setIsExporting(false);
+      setIsSharingPdf(false);
+    }
+  }
+
+  async function handleSavePdf() {
+    if (catalogItems.length === 0) {
+      Alert.alert(strings.savePdfToPhone, strings.catalogEmpty);
+      return;
+    }
+
+    setIsSavingPdf(true);
+
+    try {
+      await saveCatalogPdfToDevice({
+        items,
+        locale,
+        customRooms,
+        strings: pdfStrings,
+      });
+      Alert.alert(strings.savePdfToPhone, strings.pdfSavedToPhone);
+    } catch (error) {
+      if (error instanceof CatalogPdfError && error.code === 'SAVE_CANCELLED') {
+        return;
+      }
+      if (error instanceof CatalogPdfError && error.code === 'EMPTY_CATALOG') {
+        Alert.alert(strings.savePdfToPhone, strings.catalogEmpty);
+        return;
+      }
+
+      const message =
+        error instanceof Error ? error.message : strings.genericError;
+      console.error('Catalog PDF save failed:', error);
+      Alert.alert(strings.exportPdfFailedTitle, message);
+    } finally {
+      setIsSavingPdf(false);
     }
   }
 
@@ -125,23 +171,47 @@ export function CatalogScreen({
         <Text style={styles.disclaimerText}>{strings.catalogDisclaimer}</Text>
       </View>
 
-      <Pressable
-        style={[
-          styles.exportButton,
-          (catalogItems.length === 0 || isExporting) && styles.exportButtonDisabled,
-        ]}
-        onPress={() => void handleExportPdf()}
-        disabled={catalogItems.length === 0 || isExporting}
-      >
-        {isExporting ? (
-          <View style={styles.exportRow}>
+      <View style={styles.pdfRow}>
+        <Pressable
+          style={[
+            styles.exportButton,
+            styles.exportButtonHalf,
+            (catalogItems.length === 0 || isSharingPdf) && styles.exportButtonDisabled,
+          ]}
+          onPress={() => void handleSharePdf()}
+          disabled={catalogItems.length === 0 || isSharingPdf}
+        >
+          {isSharingPdf ? (
             <ActivityIndicator color="#fff" />
-            <Text style={styles.exportButtonText}>{strings.exportingPdf}</Text>
-          </View>
-        ) : (
-          <Text style={styles.exportButtonText}>{strings.exportPdf}</Text>
-        )}
-      </Pressable>
+          ) : (
+            <Text style={styles.exportButtonText}>{strings.sharePdf}</Text>
+          )}
+        </Pressable>
+
+        {Platform.OS === 'android' ? (
+          <Pressable
+            style={[
+              styles.saveButton,
+              styles.exportButtonHalf,
+              (catalogItems.length === 0 || isSavingPdf) && styles.exportButtonDisabled,
+            ]}
+            onPress={() => void handleSavePdf()}
+            disabled={catalogItems.length === 0 || isSavingPdf}
+          >
+            {isSavingPdf ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.exportButtonText}>{strings.savePdfToPhone}</Text>
+            )}
+          </Pressable>
+        ) : null}
+      </View>
+
+      {!selectedRoomId && customRooms.length > 0 ? (
+        <Pressable style={styles.manageRoomsButton} onPress={onManageRooms}>
+          <Text style={styles.manageRoomsText}>{strings.manageRooms}</Text>
+        </Pressable>
+      ) : null}
 
       {catalogItems.length === 0 ? (
         <Text style={styles.empty}>{strings.catalogEmpty}</Text>
@@ -162,7 +232,12 @@ export function CatalogScreen({
                 <Text style={styles.itemPrice}>
                   ~€{item.estimatedPriceEUR.toFixed(0)} · {strings.valueSourceAi}
                 </Text>
-                {item.forSale ? (
+                {item.soldAt ? (
+                  <Text style={[styles.itemBadge, styles.soldBadge]}>
+                    {strings.statusSold}
+                  </Text>
+                ) : null}
+                {!item.soldAt && item.forSale ? (
                   <Text style={styles.itemBadge}>
                     {item.listedAt ? strings.statusListed : strings.statusForSale}
                   </Text>
@@ -230,23 +305,46 @@ const styles = StyleSheet.create({
     color: '#6b5a2e',
     lineHeight: 18,
   },
+  pdfRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
   exportButton: {
     backgroundColor: '#1a5fb4',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 0,
+  },
+  saveButton: {
+    backgroundColor: '#1a7f37',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  exportButtonHalf: {
+    flex: 1,
+    marginBottom: 0,
   },
   exportButtonDisabled: {
     opacity: 0.55,
   },
-  exportRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
   exportButtonText: {
     color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  manageRoomsButton: {
+    borderColor: '#1a5fb4',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  manageRoomsText: {
+    color: '#1a5fb4',
     fontWeight: '700',
     fontSize: 15,
   },
@@ -310,5 +408,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#1a5fb4',
     fontWeight: '600',
+  },
+  soldBadge: {
+    color: '#1a7f37',
   },
 });

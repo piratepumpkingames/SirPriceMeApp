@@ -12,6 +12,10 @@ type ResultHubScreenProps = {
   onSell: () => void;
   onAddToCatalog: () => void;
   onRemoveFromCatalog: () => void;
+  onEdit: () => void;
+  onMarkSold: () => void;
+  onUnmarkSold: () => void;
+  onDeleteItem: () => void;
   onOpenCatalog: () => void;
   onScanAnother: () => void;
 };
@@ -23,16 +27,26 @@ export function ResultHubScreen({
   onSell,
   onAddToCatalog,
   onRemoveFromCatalog,
+  onEdit,
+  onMarkSold,
+  onUnmarkSold,
+  onDeleteItem,
   onOpenCatalog,
   onScanAnother,
 }: ResultHubScreenProps) {
   const strings = getStrings(locale);
+  const displayPrice = item.soldAt
+    ? (item.soldPriceEUR ?? item.estimatedPriceEUR)
+    : item.estimatedPriceEUR;
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Image source={{ uri: item.photoUri }} style={styles.preview} />
       <Text style={styles.title}>{item.objectName}</Text>
-      <Text style={styles.price}>~€{item.estimatedPriceEUR.toFixed(0)}</Text>
+      <Text style={styles.price}>
+        {item.soldAt ? '€' : '~€'}
+        {displayPrice.toFixed(0)}
+      </Text>
 
       <View style={styles.statusRow}>
         {item.inCatalog && item.roomId ? (
@@ -41,7 +55,10 @@ export function ResultHubScreen({
             {resolveRoomLabel(item.roomId, locale, customRooms)}
           </Text>
         ) : null}
-        {item.forSale ? (
+        {item.soldAt ? (
+          <Text style={[styles.statusChip, styles.soldChip]}>{strings.statusSold}</Text>
+        ) : null}
+        {!item.soldAt && item.forSale ? (
           <Text style={styles.statusChip}>
             {item.listedAt ? strings.statusListed : strings.statusForSale}
           </Text>
@@ -52,10 +69,33 @@ export function ResultHubScreen({
       <Text style={styles.value}>{item.condition}</Text>
       <Text style={styles.label}>{strings.explanation}</Text>
       <Text style={styles.value}>{item.explanation}</Text>
+      {item.userNotes.trim().length > 0 ? (
+        <>
+          <Text style={styles.label}>{strings.notesLabel}</Text>
+          <Text style={styles.value}>{item.userNotes}</Text>
+        </>
+      ) : null}
 
-      <Pressable style={styles.primaryAction} onPress={onSell}>
-        <Text style={styles.primaryActionText}>{strings.sellThisItem}</Text>
+      <Pressable style={styles.editAction} onPress={onEdit}>
+        <Text style={styles.editActionText}>{strings.editItem}</Text>
       </Pressable>
+
+      {!item.soldAt ? (
+        <Pressable style={styles.primaryAction} onPress={onSell}>
+          <Text style={styles.primaryActionText}>{strings.sellThisItem}</Text>
+        </Pressable>
+      ) : null}
+
+      {item.soldAt ? (
+        <Pressable style={styles.secondaryAction} onPress={onUnmarkSold}>
+          <Text style={styles.secondaryActionText}>{strings.unmarkAsSold}</Text>
+        </Pressable>
+      ) : (
+        <Pressable style={styles.secondaryAction} onPress={onMarkSold}>
+          <Text style={styles.secondaryActionText}>{strings.markAsSold}</Text>
+        </Pressable>
+      )}
+
       {item.inCatalog ? (
         <Pressable style={styles.dangerAction} onPress={onRemoveFromCatalog}>
           <Text style={styles.dangerActionText}>{strings.removeFromCatalog}</Text>
@@ -65,6 +105,10 @@ export function ResultHubScreen({
           <Text style={styles.secondaryActionText}>{strings.addToCatalog}</Text>
         </Pressable>
       )}
+
+      <Pressable style={styles.dangerAction} onPress={onDeleteItem}>
+        <Text style={styles.dangerActionText}>{strings.deleteItem}</Text>
+      </Pressable>
 
       <Pressable style={styles.linkButton} onPress={onOpenCatalog}>
         <Text style={styles.linkButtonText}>{strings.myCatalog}</Text>
@@ -114,6 +158,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  soldChip: {
+    backgroundColor: '#e8f5e9',
+    color: '#1a7f37',
+  },
   label: {
     fontSize: 14,
     fontWeight: '600',
@@ -124,6 +172,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#333',
     marginBottom: 12,
+  },
+  editAction: {
+    borderColor: '#666',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  editActionText: {
+    color: '#444',
+    fontSize: 15,
+    fontWeight: '600',
   },
   primaryAction: {
     backgroundColor: '#1a5fb4',
@@ -143,7 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   secondaryActionText: {
     color: '#1a5fb4',
@@ -156,7 +217,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   dangerActionText: {
     color: '#b00020',

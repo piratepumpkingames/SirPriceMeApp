@@ -19,6 +19,7 @@ export type ItemRecord = {
   forSale: boolean;
   listedAt: string | null;
   soldAt: string | null;
+  soldPriceEUR: number | null;
 };
 
 export function createItemId(): string {
@@ -51,6 +52,7 @@ export function createItemFromAnalysis(
     forSale: false,
     listedAt: null,
     soldAt: null,
+    soldPriceEUR: null,
   };
 }
 

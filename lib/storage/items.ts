@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { copyAsync, documentDirectory } from 'expo-file-system/legacy';
+import { copyAsync, deleteAsync, documentDirectory } from 'expo-file-system/legacy';
 import type { ItemRecord } from '../../types/item';
 
 export type CatalogRoomSummary = {
@@ -100,9 +100,41 @@ export function getCatalogRoomSummaries(
   return [...totals.values()];
 }
 
+export async function deleteStoredPhoto(photoUri: string): Promise<void> {
+  if (!documentDirectory || !photoUri.startsWith(documentDirectory)) {
+    return;
+  }
+
+  try {
+    await deleteAsync(photoUri, { idempotent: true });
+  } catch {
+    // Photo may already be missing.
+  }
+}
+
+export async function deleteItemById(id: string): Promise<boolean> {
+  const items = await loadItems();
+  const item = items.find((entry) => entry.id === id);
+
+  if (!item) {
+    return false;
+  }
+
+  await deleteStoredPhoto(item.photoUri);
+  await saveItems(items.filter((entry) => entry.id !== id));
+  return true;
+}
+
 export function getCatalogItemsInRoom(
   items: ItemRecord[] | null | undefined,
   roomId: string,
 ): ItemRecord[] {
   return getCatalogItems(items).filter((item) => item.roomId === roomId);
+}
+
+export function countItemsInRoom(
+  items: ItemRecord[] | null | undefined,
+  roomId: string,
+): number {
+  return getCatalogItemsInRoom(items, roomId).length;
 }

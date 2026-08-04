@@ -1,10 +1,13 @@
 import * as Print from 'expo-print';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   documentDirectory,
   EncodingType,
+  StorageAccessFramework,
   writeAsStringAsync,
 } from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { Platform } from 'react-native';
 import type { ContentLocale } from './locale';
 import { formatString } from './locale';
 import { resolveRoomLabel } from './rooms';
@@ -27,7 +30,9 @@ export type CatalogPdfStrings = {
   pdfUnassignedRoom: string;
   statusForSale: string;
   statusListed: string;
+  statusSold: string;
   exportPdf: string;
+  savePdfToPhone: string;
 };
 
 type ExportCatalogPdfOptions = {
@@ -61,6 +66,11 @@ function formatExportDate(locale: ContentLocale): string {
 }
 
 function getSaleStatus(item: ItemRecord, strings: CatalogPdfStrings): string | null {
+  if (item.soldAt) {
+    const soldPrice = item.soldPriceEUR ?? item.estimatedPriceEUR;
+    return `${strings.statusSold} · €${soldPrice.toFixed(0)}`;
+  }
+
   if (!item.forSale) {
     return null;
   }
@@ -242,29 +252,51 @@ function buildCatalogHtml({
 export class CatalogPdfError extends Error {
   constructor(
     message: string,
-    readonly code: 'EMPTY_CATALOG' | 'SHARING_UNAVAILABLE' | 'EXPORT_FAILED',
+    readonly code:
+      | 'EMPTY_CATALOG'
+      | 'SHARING_UNAVAILABLE'
+      | 'EXPORT_FAILED'
+      | 'SAVE_CANCELLED',
   ) {
     super(message);
     this.name = 'CatalogPdfError';
   }
 }
 
-async function prepareShareablePdfUri(
-  result: Print.FilePrintResult,
+const PDF_SAVE_DIR_KEY = '@sirpriceme/pdf_save_dir';
+
+async function generateCatalogPdfBase64(
+  options: ExportCatalogPdfOptions,
 ): Promise<string> {
-  if (!documentDirectory) {
-    return result.uri;
+  const catalogItems = getCatalogItems(options.items);
+
+  if (catalogItems.length === 0) {
+    throw new CatalogPdfError('Catalog is empty.', 'EMPTY_CATALOG');
   }
+
+  const html = buildCatalogHtml(options);
+  const result = await Print.printToFileAsync({ html, base64: true });
 
   if (!result.base64) {
     throw new CatalogPdfError(
-      'PDF data was not returned for sharing.',
+      'PDF data was not returned.',
+      'EXPORT_FAILED',
+    );
+  }
+
+  return result.base64;
+}
+
+async function prepareShareablePdfUri(base64: string): Promise<string> {
+  if (!documentDirectory) {
+    throw new CatalogPdfError(
+      'PDF could not be saved for sharing.',
       'EXPORT_FAILED',
     );
   }
 
   const destination = `${documentDirectory}sirpriceme-catalog-${Date.now()}.pdf`;
-  await writeAsStringAsync(destination, result.base64, {
+  await writeAsStringAsync(destination, base64, {
     encoding: EncodingType.Base64,
   });
   return destination;
@@ -273,18 +305,10 @@ async function prepareShareablePdfUri(
 export async function exportAndShareCatalogPdf(
   options: ExportCatalogPdfOptions,
 ): Promise<void> {
-  const catalogItems = getCatalogItems(options.items);
-
-  if (catalogItems.length === 0) {
-    throw new CatalogPdfError('Catalog is empty.', 'EMPTY_CATALOG');
-  }
-
-  const html = buildCatalogHtml(options);
-
   let uri: string;
   try {
-    const result = await Print.printToFileAsync({ html, base64: true });
-    uri = await prepareShareablePdfUri(result);
+    const base64 = await generateCatalogPdfBase64(options);
+    uri = await prepareShareablePdfUri(base64);
   } catch (error) {
     if (error instanceof CatalogPdfError) {
       throw error;
@@ -303,4 +327,48 @@ export async function exportAndShareCatalogPdf(
     UTI: 'com.adobe.pdf',
     dialogTitle: options.strings.exportPdf,
   });
+}
+
+async function resolveSaveDirectoryUri(): Promise<string> {
+  const savedUri = await AsyncStorage.getItem(PDF_SAVE_DIR_KEY);
+  if (savedUri) {
+    return savedUri;
+  }
+
+  const initialUri = StorageAccessFramework.getUriForDirectoryInRoot('Download');
+  const permissions =
+    await StorageAccessFramework.requestDirectoryPermissionsAsync(initialUri);
+
+  if (!permissions.granted) {
+    throw new CatalogPdfError('Save location was not selected.', 'SAVE_CANCELLED');
+  }
+
+  await AsyncStorage.setItem(PDF_SAVE_DIR_KEY, permissions.directoryUri);
+  return permissions.directoryUri;
+}
+
+export async function saveCatalogPdfToDevice(
+  options: ExportCatalogPdfOptions,
+): Promise<string> {
+  if (Platform.OS !== 'android') {
+    throw new CatalogPdfError(
+      'Direct save is only supported on Android.',
+      'EXPORT_FAILED',
+    );
+  }
+
+  const base64 = await generateCatalogPdfBase64(options);
+  const directoryUri = await resolveSaveDirectoryUri();
+  const fileName = `sirpriceme-catalog-${Date.now()}`;
+  const fileUri = await StorageAccessFramework.createFileAsync(
+    directoryUri,
+    fileName,
+    'application/pdf',
+  );
+
+  await StorageAccessFramework.writeAsStringAsync(fileUri, base64, {
+    encoding: EncodingType.Base64,
+  });
+
+  return fileName;
 }
