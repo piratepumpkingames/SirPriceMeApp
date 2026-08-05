@@ -135,6 +135,39 @@ type UiStrings = {
   analyzingStepPrice: string;
   itemDetailsSection: string;
   itemActionsSection: string;
+  identificationSection: string;
+  identificationHint: string;
+  serialNumberLabel: string;
+  modelNumberLabel: string;
+  barcodeLabel: string;
+  scanBarcode: string;
+  scanBarcodeTitle: string;
+  scanBarcodeHint: string;
+  scanBarcodeAllowCamera: string;
+  scanBarcodeWaiting: string;
+  barcodeScanned: string;
+  addPhoto: string;
+  addAnotherPhoto: string;
+  primaryPhoto: string;
+  removePhotoTitle: string;
+  removePhotoConfirm: string;
+  removePhotoLast: string;
+  removePhotoAction: string;
+  pdfSerialNumber: string;
+  pdfModelNumber: string;
+  pdfBarcode: string;
+  listingPhotosTitle: string;
+  sellWorkflowHint: string;
+  sharePhotos: string;
+  sharingPhotos: string;
+  savePhotosToGallery: string;
+  savingPhotosToGallery: string;
+  photosSavedToGallery: string;
+  photosShareFailedTitle: string;
+  photosSaveFailedTitle: string;
+  photoLibraryPermission: string;
+  noPhotosToShare: string;
+  savePhotosExpoGoHint: string;
 };
 
 const LOCALE_NAMES: Record<ContentLocale, string> = {
@@ -308,6 +341,42 @@ export const ui: Record<ContentLocale, UiStrings> = {
     analyzingStepPrice: 'Estimating value…',
     itemDetailsSection: 'Details',
     itemActionsSection: 'Actions',
+    identificationSection: 'Identification',
+    identificationHint:
+      'Optional — helps with insurance claims. Scan a barcode or type numbers from the label.',
+    serialNumberLabel: 'Serial number',
+    modelNumberLabel: 'Model number',
+    barcodeLabel: 'Barcode / EAN',
+    scanBarcode: 'Scan barcode',
+    scanBarcodeTitle: 'Scan barcode',
+    scanBarcodeHint: 'Point the camera at the product barcode or QR code on the box or label.',
+    scanBarcodeAllowCamera: 'Allow camera',
+    scanBarcodeWaiting: 'Starting scanner…',
+    barcodeScanned: 'Barcode saved. You can edit it before saving.',
+    addPhoto: 'Add photo',
+    addAnotherPhoto: 'Add another photo',
+    primaryPhoto: 'Main',
+    removePhotoTitle: 'Remove photo?',
+    removePhotoConfirm: 'This photo will be removed from the item.',
+    removePhotoLast: 'Keep at least one photo for this item.',
+    removePhotoAction: 'Remove',
+    pdfSerialNumber: 'Serial',
+    pdfModelNumber: 'Model',
+    pdfBarcode: 'Barcode',
+    listingPhotosTitle: 'Photos for your listing',
+    sellWorkflowHint:
+      '1. Generate and copy the listing text\n2. Share or save photos below\n3. Open Bolha, Facebook Marketplace, or similar\n4. Paste the text and attach the photos',
+    sharePhotos: 'Share photos',
+    sharingPhotos: 'Sharing…',
+    savePhotosToGallery: 'Save photos to gallery',
+    savingPhotosToGallery: 'Saving…',
+    photosSavedToGallery: 'Photos saved to your gallery. Attach them when creating the ad.',
+    photosShareFailedTitle: 'Could not share photos',
+    photosSaveFailedTitle: 'Could not save photos',
+    photoLibraryPermission: 'Photo library access is needed to save images to your gallery.',
+    noPhotosToShare: 'This item has no photos.',
+    savePhotosExpoGoHint:
+      'In Expo Go, use Share photos. Save to gallery works fully in the installed APK.',
   },
   sl: {
     subtitle: 'Fotografirajte predmet in ocenite njegovo vrednost',
@@ -450,6 +519,44 @@ export const ui: Record<ContentLocale, UiStrings> = {
     analyzingStepPrice: 'Ocenjujem vrednost…',
     itemDetailsSection: 'Podrobnosti',
     itemActionsSection: 'Dejanja',
+    identificationSection: 'Identifikacija',
+    identificationHint:
+      'Neobvezno — koristno za zavarovalnico. Scanirajte črtno kodo ali vnesite številke s nalepke.',
+    serialNumberLabel: 'Serijska številka',
+    modelNumberLabel: 'Številka modela',
+    barcodeLabel: 'Črtna koda / EAN',
+    scanBarcode: 'Scaniraj črtno kodo',
+    scanBarcodeTitle: 'Scaniraj črtno kodo',
+    scanBarcodeHint: 'Usmerite kamero na črtno kodo ali QR kodo na embalaži ali nalepki.',
+    scanBarcodeAllowCamera: 'Dovoli kamero',
+    scanBarcodeWaiting: 'Zaganjam scanner…',
+    barcodeScanned: 'Črtna koda shranjena. Lahko jo uredite pred shranjevanjem.',
+    addPhoto: 'Dodaj fotografijo',
+    addAnotherPhoto: 'Dodaj še fotografijo',
+    primaryPhoto: 'Glavna',
+    removePhotoTitle: 'Odstranim fotografijo?',
+    removePhotoConfirm: 'Ta fotografija bo odstranjena s predmeta.',
+    removePhotoLast: 'Obdržite vsaj eno fotografijo za ta predmet.',
+    removePhotoAction: 'Odstrani',
+    pdfSerialNumber: 'Serijska',
+    pdfModelNumber: 'Model',
+    pdfBarcode: 'Črtna koda',
+    listingPhotosTitle: 'Fotografije za oglas',
+    sellWorkflowHint:
+      '1. Ustvarite in kopirajte besedilo oglasa\n2. Spodaj delite ali shranite fotografije\n3. Odprite Bolho, Facebook Marketplace ipd.\n4. Prilepite besedilo in priložite fotografije',
+    sharePhotos: 'Deli fotografije',
+    sharingPhotos: 'Delim…',
+    savePhotosToGallery: 'Shrani fotografije v galerijo',
+    savingPhotosToGallery: 'Shranjujem…',
+    photosSavedToGallery:
+      'Fotografije shranjene v galerijo. Priložite jih ob objavi oglasa.',
+    photosShareFailedTitle: 'Fotografij ni mogoče deliti',
+    photosSaveFailedTitle: 'Fotografij ni mogoče shraniti',
+    photoLibraryPermission:
+      'Za shranjevanje v galerijo potrebujete dostop do fotografij.',
+    noPhotosToShare: 'Ta predmet nima fotografij.',
+    savePhotosExpoGoHint:
+      'V Expo Go uporabite Deli fotografije. Shranjevanje v galerijo deluje v nameščeni APK aplikaciji.',
   },
   hr: {
     subtitle: 'Fotografirajte predmet i procijenite njegovu vrijednost',
@@ -592,6 +699,44 @@ export const ui: Record<ContentLocale, UiStrings> = {
     analyzingStepPrice: 'Procjenjujem vrijednost…',
     itemDetailsSection: 'Detalji',
     itemActionsSection: 'Radnje',
+    identificationSection: 'Identifikacija',
+    identificationHint:
+      'Neobavezno — korisno za osiguranje. Skenirajte barkod ili upišite brojeve s naljepnice.',
+    serialNumberLabel: 'Serijski broj',
+    modelNumberLabel: 'Broj modela',
+    barcodeLabel: 'Barkod / EAN',
+    scanBarcode: 'Skeniraj barkod',
+    scanBarcodeTitle: 'Skeniraj barkod',
+    scanBarcodeHint: 'Usmjerite kameru prema barkodu ili QR kodu na kutiji ili naljepnici.',
+    scanBarcodeAllowCamera: 'Dozvoli kameru',
+    scanBarcodeWaiting: 'Pokrećem skener…',
+    barcodeScanned: 'Barkod spremljen. Možete ga urediti prije spremanja.',
+    addPhoto: 'Dodaj fotografiju',
+    addAnotherPhoto: 'Dodaj još fotografiju',
+    primaryPhoto: 'Glavna',
+    removePhotoTitle: 'Ukloniti fotografiju?',
+    removePhotoConfirm: 'Ova fotografija bit će uklonjena s predmeta.',
+    removePhotoLast: 'Zadržite barem jednu fotografiju za ovaj predmet.',
+    removePhotoAction: 'Ukloni',
+    pdfSerialNumber: 'Serijski',
+    pdfModelNumber: 'Model',
+    pdfBarcode: 'Barkod',
+    listingPhotosTitle: 'Fotografije za oglas',
+    sellWorkflowHint:
+      '1. Generirajte i kopirajte tekst oglasa\n2. Podijelite ili spremite fotografije u galeriju\n3. Otvorite Njuškalo, Facebook Marketplace itd.\n4. Zalijepite tekst i priložite fotografije',
+    sharePhotos: 'Podijeli fotografije',
+    sharingPhotos: 'Dijelim…',
+    savePhotosToGallery: 'Spremi fotografije u galeriju',
+    savingPhotosToGallery: 'Spremanje…',
+    photosSavedToGallery:
+      'Fotografije spremljene u galeriju. Priložite ih pri objavi oglasa.',
+    photosShareFailedTitle: 'Fotografije se ne mogu podijeliti',
+    photosSaveFailedTitle: 'Fotografije se ne mogu spremiti',
+    photoLibraryPermission:
+      'Potreban je pristup galeriji za spremanje fotografija.',
+    noPhotosToShare: 'Ovaj predmet nema fotografija.',
+    savePhotosExpoGoHint:
+      'U Expo Go koristite Podijeli fotografije. Spremanje u galeriju radi u instaliranoj APK aplikaciji.',
   },
   de: {
     subtitle: 'Fotografieren Sie einen Gegenstand und schätzen Sie den Wert',
@@ -734,6 +879,44 @@ export const ui: Record<ContentLocale, UiStrings> = {
     analyzingStepPrice: 'Wert wird geschätzt…',
     itemDetailsSection: 'Details',
     itemActionsSection: 'Aktionen',
+    identificationSection: 'Identifikation',
+    identificationHint:
+      'Optional — hilfreich für Versicherungen. Barcode scannen oder Nummern vom Etikett eingeben.',
+    serialNumberLabel: 'Seriennummer',
+    modelNumberLabel: 'Modellnummer',
+    barcodeLabel: 'Barcode / EAN',
+    scanBarcode: 'Barcode scannen',
+    scanBarcodeTitle: 'Barcode scannen',
+    scanBarcodeHint: 'Kamera auf den Produktbarcode oder QR-Code auf Verpackung oder Etikett richten.',
+    scanBarcodeAllowCamera: 'Kamera erlauben',
+    scanBarcodeWaiting: 'Scanner startet…',
+    barcodeScanned: 'Barcode gespeichert. Vor dem Speichern bearbeitbar.',
+    addPhoto: 'Foto hinzufügen',
+    addAnotherPhoto: 'Weiteres Foto',
+    primaryPhoto: 'Haupt',
+    removePhotoTitle: 'Foto entfernen?',
+    removePhotoConfirm: 'Dieses Foto wird vom Artikel entfernt.',
+    removePhotoLast: 'Mindestens ein Foto behalten.',
+    removePhotoAction: 'Entfernen',
+    pdfSerialNumber: 'Seriennummer',
+    pdfModelNumber: 'Modell',
+    pdfBarcode: 'Barcode',
+    listingPhotosTitle: 'Fotos für Ihre Anzeige',
+    sellWorkflowHint:
+      '1. Anzeigentext erstellen und kopieren\n2. Fotos unten teilen oder in der Galerie speichern\n3. Kleinanzeigen, Facebook Marketplace usw. öffnen\n4. Text einfügen und Fotos anhängen',
+    sharePhotos: 'Fotos teilen',
+    sharingPhotos: 'Teile…',
+    savePhotosToGallery: 'Fotos in Galerie speichern',
+    savingPhotosToGallery: 'Speichere…',
+    photosSavedToGallery:
+      'Fotos in der Galerie gespeichert. Beim Erstellen der Anzeige anhängen.',
+    photosShareFailedTitle: 'Fotos konnten nicht geteilt werden',
+    photosSaveFailedTitle: 'Fotos konnten nicht gespeichert werden',
+    photoLibraryPermission:
+      'Galeriezugriff wird zum Speichern der Fotos benötigt.',
+    noPhotosToShare: 'Dieser Artikel hat keine Fotos.',
+    savePhotosExpoGoHint:
+      'In Expo Go Fotos teilen verwenden. Galerie-Speichern funktioniert in der installierten APK.',
   },
 };
 

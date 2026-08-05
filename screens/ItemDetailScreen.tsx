@@ -1,4 +1,5 @@
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ItemPhotoGallery } from '../components/ItemPhotoGallery';
 import { AppButton } from '../components/ui/AppButton';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SectionTitle } from '../components/ui/SectionTitle';
@@ -8,7 +9,7 @@ import { getStrings } from '../lib/locale';
 import { resolveRoomLabel } from '../lib/rooms';
 import { colors, screenContent, typography } from '../lib/theme';
 import type { CustomRoom } from '../lib/storage/customRooms';
-import type { ItemRecord } from '../types/item';
+import { hasIdentification, type ItemRecord } from '../types/item';
 
 export type ItemDetailMode = 'scan' | 'catalog';
 
@@ -22,6 +23,8 @@ type ItemDetailScreenProps = {
   onAddToCatalog: () => void;
   onRemoveFromCatalog: () => void;
   onEdit: () => void;
+  onAddPhoto: () => void;
+  onRemovePhoto: (index: number) => void;
   onMarkSold: () => void;
   onUnmarkSold: () => void;
   onDeleteItem: () => void;
@@ -39,6 +42,8 @@ export function ItemDetailScreen({
   onAddToCatalog,
   onRemoveFromCatalog,
   onEdit,
+  onAddPhoto,
+  onRemovePhoto,
   onMarkSold,
   onUnmarkSold,
   onDeleteItem,
@@ -56,7 +61,14 @@ export function ItemDetailScreen({
         <ScreenHeader backLabel={strings.back} onBack={onBack} />
       ) : null}
 
-      <Image source={{ uri: item.photoUri }} style={styles.preview} />
+      <ItemPhotoGallery
+        photos={item.photos}
+        locale={locale}
+        editable
+        onAddPhoto={onAddPhoto}
+        onRemovePhoto={onRemovePhoto}
+      />
+
       <Text style={styles.title}>{item.objectName}</Text>
       <Text style={styles.price}>
         {item.soldAt ? '€' : '~€'}
@@ -88,6 +100,30 @@ export function ItemDetailScreen({
         <>
           <Text style={styles.label}>{strings.notesLabel}</Text>
           <Text style={styles.value}>{item.userNotes}</Text>
+        </>
+      ) : null}
+
+      {hasIdentification(item) ? (
+        <>
+          <SectionTitle>{strings.identificationSection}</SectionTitle>
+          {item.serialNumber.trim().length > 0 ? (
+            <>
+              <Text style={styles.label}>{strings.serialNumberLabel}</Text>
+              <Text style={styles.value}>{item.serialNumber}</Text>
+            </>
+          ) : null}
+          {item.modelNumber.trim().length > 0 ? (
+            <>
+              <Text style={styles.label}>{strings.modelNumberLabel}</Text>
+              <Text style={styles.value}>{item.modelNumber}</Text>
+            </>
+          ) : null}
+          {item.barcode.trim().length > 0 ? (
+            <>
+              <Text style={styles.label}>{strings.barcodeLabel}</Text>
+              <Text style={styles.value}>{item.barcode}</Text>
+            </>
+          ) : null}
         </>
       ) : null}
 
@@ -153,13 +189,6 @@ export function ItemDetailScreen({
 
 const styles = StyleSheet.create({
   content: screenContent,
-  preview: {
-    width: '100%',
-    height: 280,
-    borderRadius: 12,
-    resizeMode: 'cover',
-    marginBottom: 16,
-  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',

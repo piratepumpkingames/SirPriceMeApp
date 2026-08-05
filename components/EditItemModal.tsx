@@ -9,8 +9,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { BarcodeScanModal } from './BarcodeScanModal';
 import type { ContentLocale } from '../lib/locale';
 import { getStrings } from '../lib/locale';
+import { colors, radii } from '../lib/theme';
 import type { ItemRecord } from '../types/item';
 
 export type ItemEditDraft = {
@@ -19,6 +21,9 @@ export type ItemEditDraft = {
   estimatedPriceEUR: number;
   explanation: string;
   userNotes: string;
+  serialNumber: string;
+  modelNumber: string;
+  barcode: string;
 };
 
 type EditItemModalProps = {
@@ -42,6 +47,10 @@ export function EditItemModal({
   const [priceText, setPriceText] = useState('');
   const [explanation, setExplanation] = useState('');
   const [userNotes, setUserNotes] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [modelNumber, setModelNumber] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   useEffect(() => {
     if (!item || !visible) {
@@ -53,6 +62,9 @@ export function EditItemModal({
     setPriceText(String(item.estimatedPriceEUR));
     setExplanation(item.explanation);
     setUserNotes(item.userNotes);
+    setSerialNumber(item.serialNumber);
+    setModelNumber(item.modelNumber);
+    setBarcode(item.barcode);
   }, [item, visible]);
 
   function handleSave() {
@@ -75,7 +87,16 @@ export function EditItemModal({
       estimatedPriceEUR: price,
       explanation: explanation.trim(),
       userNotes: userNotes.trim(),
+      serialNumber: serialNumber.trim(),
+      modelNumber: modelNumber.trim(),
+      barcode: barcode.trim(),
     });
+  }
+
+  function handleBarcodeScanned(value: string) {
+    setBarcode(value);
+    setShowBarcodeScanner(false);
+    Alert.alert(strings.scanBarcodeTitle, strings.barcodeScanned);
   }
 
   if (!item) {
@@ -83,57 +104,102 @@ export function EditItemModal({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.card}>
-          <ScrollView keyboardShouldPersistTaps="handled">
-            <Text style={styles.title}>{strings.editItemTitle}</Text>
+    <>
+      <Modal visible={visible} animationType="slide" transparent>
+        <View style={styles.overlay}>
+          <View style={styles.card}>
+            <ScrollView keyboardShouldPersistTaps="handled">
+              <Text style={styles.title}>{strings.editItemTitle}</Text>
 
-            <Text style={styles.label}>{strings.itemNameLabel}</Text>
-            <TextInput style={styles.input} value={objectName} onChangeText={setObjectName} />
+              <Text style={styles.sectionLabel}>{strings.itemDetailsSection}</Text>
 
-            <Text style={styles.label}>{strings.priceLabel}</Text>
-            <TextInput
-              style={styles.input}
-              value={priceText}
-              onChangeText={setPriceText}
-              keyboardType="decimal-pad"
-            />
+              <Text style={styles.label}>{strings.itemNameLabel}</Text>
+              <TextInput style={styles.input} value={objectName} onChangeText={setObjectName} />
 
-            <Text style={styles.label}>{strings.condition}</Text>
-            <TextInput
-              style={[styles.input, styles.multiline]}
-              value={condition}
-              onChangeText={setCondition}
-              multiline
-            />
+              <Text style={styles.label}>{strings.priceLabel}</Text>
+              <TextInput
+                style={styles.input}
+                value={priceText}
+                onChangeText={setPriceText}
+                keyboardType="decimal-pad"
+              />
 
-            <Text style={styles.label}>{strings.explanation}</Text>
-            <TextInput
-              style={[styles.input, styles.multiline]}
-              value={explanation}
-              onChangeText={setExplanation}
-              multiline
-            />
+              <Text style={styles.label}>{strings.condition}</Text>
+              <TextInput
+                style={[styles.input, styles.multiline]}
+                value={condition}
+                onChangeText={setCondition}
+                multiline
+              />
 
-            <Text style={styles.label}>{strings.notesLabel}</Text>
-            <TextInput
-              style={[styles.input, styles.multiline]}
-              value={userNotes}
-              onChangeText={setUserNotes}
-              multiline
-            />
-          </ScrollView>
+              <Text style={styles.label}>{strings.explanation}</Text>
+              <TextInput
+                style={[styles.input, styles.multiline]}
+                value={explanation}
+                onChangeText={setExplanation}
+                multiline
+              />
 
-          <Pressable style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>{strings.saveChanges}</Text>
-          </Pressable>
-          <Pressable style={styles.cancelButton} onPress={onCancel}>
-            <Text style={styles.cancelButtonText}>{strings.cancel}</Text>
-          </Pressable>
+              <Text style={styles.label}>{strings.notesLabel}</Text>
+              <TextInput
+                style={[styles.input, styles.multiline]}
+                value={userNotes}
+                onChangeText={setUserNotes}
+                multiline
+              />
+
+              <Text style={styles.sectionLabel}>{strings.identificationSection}</Text>
+              <Text style={styles.sectionHint}>{strings.identificationHint}</Text>
+
+              <Text style={styles.label}>{strings.serialNumberLabel}</Text>
+              <TextInput
+                style={styles.input}
+                value={serialNumber}
+                onChangeText={setSerialNumber}
+                autoCapitalize="characters"
+              />
+
+              <Text style={styles.label}>{strings.modelNumberLabel}</Text>
+              <TextInput
+                style={styles.input}
+                value={modelNumber}
+                onChangeText={setModelNumber}
+                autoCapitalize="characters"
+              />
+
+              <Text style={styles.label}>{strings.barcodeLabel}</Text>
+              <TextInput
+                style={styles.input}
+                value={barcode}
+                onChangeText={setBarcode}
+                keyboardType="number-pad"
+              />
+
+              <Pressable
+                style={styles.scanButton}
+                onPress={() => setShowBarcodeScanner(true)}
+              >
+                <Text style={styles.scanButtonText}>{strings.scanBarcode}</Text>
+              </Pressable>
+            </ScrollView>
+
+            <Pressable style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>{strings.saveChanges}</Text>
+            </Pressable>
+            <Pressable style={styles.cancelButton} onPress={onCancel}>
+              <Text style={styles.cancelButtonText}>{strings.cancel}</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      <BarcodeScanModal
+        visible={showBarcodeScanner}
+        locale={locale}
+        onScan={handleBarcodeScanned}
+        onCancel={() => setShowBarcodeScanner(false)}
+      />
+    </>
   );
 }
 
@@ -144,49 +210,78 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 20,
-    maxHeight: '85%',
+    maxHeight: '90%',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: colors.text,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: 8,
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  sectionHint: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 12,
+    lineHeight: 18,
   },
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderColor: colors.border,
+    borderRadius: radii.md,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
     minHeight: 44,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     marginBottom: 14,
   },
   multiline: {
     minHeight: 72,
     textAlignVertical: 'top',
   },
+  scanButton: {
+    borderColor: colors.primary,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scanButtonText: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: '700',
+  },
   saveButton: {
-    backgroundColor: '#1a5fb4',
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: radii.md,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
   },
   saveButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -196,7 +291,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#666',
+    color: colors.textSecondary,
     fontSize: 16,
   },
 });

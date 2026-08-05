@@ -30,7 +30,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "SirPriceMe needs camera access to photograph items for pricing."
+          "cameraPermission": "SirPriceMe needs camera access to photograph items for pricing.",
+          "barcodeScannerEnabled": true
         }
       ],
       [
@@ -42,7 +43,15 @@
         }
       ],
       "expo-localization",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "SirPriceMe saves item photos to your gallery so you can attach them when creating marketplace listings.",
+          "savePhotosPermission": "SirPriceMe saves item photos to your gallery so you can attach them when creating marketplace listings.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
     ],
     "extra": {
       "eas": {

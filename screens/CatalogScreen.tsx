@@ -32,7 +32,7 @@ import {
   getCatalogRoomSummaries,
   getCatalogTotalEUR,
 } from '../lib/storage/items';
-import type { ItemRecord } from '../types/item';
+import { getPrimaryPhotoUri, type ItemRecord } from '../types/item';
 
 type CatalogScreenProps = {
   items: ItemRecord[];
@@ -77,6 +77,9 @@ export function CatalogScreen({
       statusSold: strings.statusSold,
       exportPdf: strings.sharePdf,
       savePdfToPhone: strings.savePdfToPhone,
+      pdfSerialNumber: strings.pdfSerialNumber,
+      pdfModelNumber: strings.pdfModelNumber,
+      pdfBarcode: strings.pdfBarcode,
     }),
     [strings],
   );
@@ -251,7 +254,7 @@ export function CatalogScreen({
               style={styles.itemRow}
               onPress={() => onSelectItem(item)}
             >
-              <Image source={{ uri: item.photoUri }} style={styles.thumb} />
+              <Image source={{ uri: getPrimaryPhotoUri(item) }} style={styles.thumb} />
               <View style={styles.itemMeta}>
                 <Text style={styles.itemName}>{item.objectName}</Text>
                 <Text style={styles.itemPrice}>

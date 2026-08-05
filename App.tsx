@@ -4,7 +4,6 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
   Alert,
   Button,
-  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -12,6 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { ItemPhotoGallery } from './components/ItemPhotoGallery';
 import { AnalyzingOverlay } from './components/ui/AnalyzingOverlay';
 import { AppButton } from './components/ui/AppButton';
 import { EmptyState } from './components/ui/EmptyState';
@@ -48,18 +48,24 @@ import {
 import {
   countItemsInRoom,
   deleteItemById,
+  deleteStoredPhoto,
   getCatalogItems,
   loadItems,
-  persistPhotoUri,
+  persistItemPhotos,
   upsertItem,
 } from './lib/storage/items';
 import { CatalogScreen } from './screens/CatalogScreen';
 import { ItemDetailScreen } from './screens/ItemDetailScreen';
 import { SellScreen } from './screens/SellScreen';
-import { createItemFromAnalysis, type ItemRecord } from './types/item';
+import {
+  createItemFromAnalysis,
+  type ItemPhoto,
+  type ItemRecord,
+} from './types/item';
 import { colors, radii, screenContent, typography } from './lib/theme';
 
 type Screen = 'home' | 'result' | 'itemDetail' | 'sell' | 'catalog';
+type CameraPurpose = 'pending' | 'item';
 
 export default function App() {
   const cameraRef = useRef<CameraView>(null);
@@ -68,8 +74,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [showCamera, setShowCamera] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [photoMimeType, setPhotoMimeType] = useState('image/jpeg');
+  const [cameraPurpose, setCameraPurpose] = useState<CameraPurpose>('pending');
+  const [pendingPhotos, setPendingPhotos] = useState<ItemPhoto[]>([]);
   const [currentItem, setCurrentItem] = useState<ItemRecord | null>(null);
   const [catalogItems, setCatalogItems] = useState<ItemRecord[]>([]);
   const [customRooms, setCustomRooms] = useState<CustomRoom[]>([]);
@@ -137,13 +143,13 @@ export default function App() {
   }
 
   function resetScan() {
-    setPhotoUri(null);
+    setPendingPhotos([]);
     setCurrentItem(null);
     setErrorMessage(null);
     setScreen('home');
   }
 
-  async function takePhoto() {
+  async function takePhoto(purpose: CameraPurpose = 'pending') {
     if (!cameraPermission?.granted) {
       const permission = await requestCameraPermission();
       if (!permission.granted) {
@@ -152,6 +158,7 @@ export default function App() {
       }
     }
 
+    setCameraPurpose(purpose);
     setIsCameraReady(false);
     setShowCamera(true);
   }
@@ -164,34 +171,51 @@ export default function App() {
     const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
 
     if (photo?.uri) {
-      setPhotoUri(photo.uri);
-      setPhotoMimeType('image/jpeg');
-      setCurrentItem(null);
-      setErrorMessage(null);
-      setScreen('home');
+      const newPhoto: ItemPhoto = { uri: photo.uri, mimeType: 'image/jpeg' };
+
+      if (cameraPurpose === 'item' && currentItem) {
+        let updatedItem: ItemRecord = {
+          ...currentItem,
+          photos: [...currentItem.photos, newPhoto],
+        };
+
+        if (currentItem.inCatalog) {
+          updatedItem = await persistItemPhotos(updatedItem);
+        }
+
+        const saved = await saveItem(updatedItem);
+        setCurrentItem(saved);
+      } else {
+        setPendingPhotos((current) => [...current, newPhoto]);
+        setCurrentItem(null);
+        setErrorMessage(null);
+        setScreen('home');
+      }
     }
 
     setShowCamera(false);
   }
 
   async function analyzePhoto() {
-    if (!photoUri) {
+    if (pendingPhotos.length === 0) {
       return;
     }
 
+    const primaryPhoto = pendingPhotos[0];
     setIsAnalyzing(true);
     setErrorMessage(null);
 
     try {
       const analysis = await analyzeItemPhoto(
-        photoUri,
-        photoMimeType,
+        primaryPhoto.uri,
+        primaryPhoto.mimeType,
         contentLocale,
         regionCode,
       );
       const item = await saveItem(
-        createItemFromAnalysis(analysis, photoUri, photoMimeType),
+        createItemFromAnalysis(analysis, pendingPhotos),
       );
+      setPendingPhotos([]);
       setCurrentItem(item);
       setScreen('result');
     } catch (error) {
@@ -202,6 +226,25 @@ export default function App() {
       Alert.alert(strings.analyzeFailedTitle, message);
     } finally {
       setIsAnalyzing(false);
+    }
+  }
+
+  async function handleAddPhotoToItem() {
+    await takePhoto('item');
+  }
+
+  async function handleRemovePhotoFromItem(index: number) {
+    if (!currentItem) {
+      return;
+    }
+
+    const removed = currentItem.photos[index];
+    const photos = currentItem.photos.filter((_, photoIndex) => photoIndex !== index);
+    const updated = await saveItem({ ...currentItem, photos });
+    setCurrentItem(updated);
+
+    if (removed && currentItem.inCatalog) {
+      await deleteStoredPhoto(removed.uri);
     }
   }
 
@@ -234,14 +277,14 @@ export default function App() {
     setShowRoomPicker(false);
 
     try {
-      let photoUriToSave = currentItem.photoUri;
+      let itemToSave = currentItem;
+
       if (!currentItem.inCatalog) {
-        photoUriToSave = await persistPhotoUri(currentItem.photoUri);
+        itemToSave = await persistItemPhotos(currentItem);
       }
 
       const updated = await saveItem({
-        ...currentItem,
-        photoUri: photoUriToSave,
+        ...itemToSave,
         inCatalog: true,
         roomId,
       });
@@ -309,6 +352,9 @@ export default function App() {
       estimatedPriceEUR: draft.estimatedPriceEUR,
       explanation: draft.explanation,
       userNotes: draft.userNotes,
+      serialNumber: draft.serialNumber,
+      modelNumber: draft.modelNumber,
+      barcode: draft.barcode,
     });
     setCurrentItem(updated);
     setShowEditModal(false);
@@ -486,7 +532,8 @@ export default function App() {
   }
 
   function renderHome() {
-    const showHomeEmpty = catalogCount === 0 && !photoUri && !isAnalyzing;
+    const showHomeEmpty =
+      catalogCount === 0 && pendingPhotos.length === 0 && !isAnalyzing;
 
     return (
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -554,11 +601,13 @@ export default function App() {
 
           <View style={styles.buttonRow}>
             <AppButton
-              label={strings.takePhoto}
-              onPress={takePhoto}
+              label={
+                pendingPhotos.length > 0 ? strings.addAnotherPhoto : strings.takePhoto
+              }
+              onPress={() => void takePhoto('pending')}
               style={styles.fullWidthButton}
             />
-            {photoUri ? (
+            {pendingPhotos.length > 0 ? (
               <AppButton
                 label={strings.analyze}
                 onPress={analyzePhoto}
@@ -569,8 +618,20 @@ export default function App() {
             ) : null}
           </View>
 
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.preview} />
+          {pendingPhotos.length > 0 ? (
+            <View style={styles.homeGallery}>
+              <ItemPhotoGallery
+                photos={pendingPhotos}
+                locale={contentLocale}
+                editable
+                onAddPhoto={() => void takePhoto('pending')}
+                onRemovePhoto={(index) => {
+                  setPendingPhotos((current) =>
+                    current.filter((_, photoIndex) => photoIndex !== index),
+                  );
+                }}
+              />
+            </View>
           ) : !showHomeEmpty ? (
             <Text style={styles.hint}>{strings.photoHint}</Text>
           ) : null}
@@ -599,6 +660,8 @@ export default function App() {
           onAddToCatalog={() => void beginAddToCatalog()}
           onRemoveFromCatalog={handleRemoveFromCatalog}
           onEdit={() => setShowEditModal(true)}
+          onAddPhoto={() => void handleAddPhotoToItem()}
+          onRemovePhoto={(index) => void handleRemovePhotoFromItem(index)}
           onMarkSold={() => setShowMarkSoldModal(true)}
           onUnmarkSold={handleUnmarkSold}
           onDeleteItem={handleDeleteItem}
@@ -617,6 +680,8 @@ export default function App() {
           onAddToCatalog={() => void beginAddToCatalog()}
           onRemoveFromCatalog={handleRemoveFromCatalog}
           onEdit={() => setShowEditModal(true)}
+          onAddPhoto={() => void handleAddPhotoToItem()}
+          onRemovePhoto={(index) => void handleRemovePhotoFromItem(index)}
           onMarkSold={() => setShowMarkSoldModal(true)}
           onUnmarkSold={handleUnmarkSold}
           onDeleteItem={handleDeleteItem}
@@ -692,7 +757,7 @@ export default function App() {
 
       <AnalyzingOverlay
         visible={isAnalyzing}
-        photoUri={photoUri}
+        photoUri={pendingPhotos[0]?.uri ?? null}
         steps={analyzingSteps}
       />
 
@@ -794,11 +859,8 @@ const styles = StyleSheet.create({
   fullWidthButton: {
     marginBottom: 0,
   },
-  preview: {
-    width: 280,
-    height: 280,
-    borderRadius: radii.xl,
-    resizeMode: 'cover',
+  homeGallery: {
+    width: '100%',
     marginBottom: 16,
   },
   hint: {

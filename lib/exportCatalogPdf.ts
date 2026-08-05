@@ -33,6 +33,9 @@ export type CatalogPdfStrings = {
   statusSold: string;
   exportPdf: string;
   savePdfToPhone: string;
+  pdfSerialNumber: string;
+  pdfModelNumber: string;
+  pdfBarcode: string;
 };
 
 type ExportCatalogPdfOptions = {
@@ -125,10 +128,31 @@ function buildItemHtml(item: ItemRecord, strings: CatalogPdfStrings): string {
       ? `<div class="item-notes">${escapeHtml(strings.notesLabel)}: ${escapeHtml(item.userNotes.trim())}</div>`
       : '';
 
+  const idLines: string[] = [];
+  if (item.serialNumber.trim()) {
+    idLines.push(
+      `${strings.pdfSerialNumber}: ${escapeHtml(item.serialNumber.trim())}`,
+    );
+  }
+  if (item.modelNumber.trim()) {
+    idLines.push(
+      `${strings.pdfModelNumber}: ${escapeHtml(item.modelNumber.trim())}`,
+    );
+  }
+  if (item.barcode.trim()) {
+    idLines.push(`${strings.pdfBarcode}: ${escapeHtml(item.barcode.trim())}`);
+  }
+
+  const identification =
+    idLines.length > 0
+      ? `<div class="item-notes">${escapeHtml(idLines.join(' · '))}</div>`
+      : '';
+
   return `
     <div class="item">
       <div class="item-name">${escapeHtml(item.objectName)}</div>
       <div class="item-meta">${escapeHtml(metaParts.join(' · '))}</div>
+      ${identification}
       ${notes}
     </div>
   `;

@@ -6,6 +6,8 @@
 
 ## Done
 
+- **Sell photo handoff:** Share photos, save to gallery, full photo gallery on Sell screen, workflow hint.
+- **Insurance IDs + multi-photo:** Barcode scan, serial/model fields, multiple photos per item, PDF export of IDs.
 - **UX polish batch (6–9):** Shared design language, catalog item detail screen, empty states & hints, analyzing overlay.
 - **Quality-of-life batch:** Save PDF to phone, edit items, mark as sold, delete items, manage custom rooms.
 - **Phase 3 — Catalog PDF:** Export catalog as PDF with disclaimer footer and per-item lines.
@@ -29,3 +31,4 @@ Ask in a chat: *"remind me about the backend proxy for the Gemini key"* — this
 
 - Richer marketplace search terms (synonyms, local phrasing).
 - Branch strategy for bigger feature experiments.
+- AI read serial/model from label photos.

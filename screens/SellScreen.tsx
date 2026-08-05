@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { isRunningInExpoGo } from 'expo';
 import * as Clipboard from 'expo-clipboard';
+import { ItemPhotoGallery } from '../components/ItemPhotoGallery';
 import { AppButton } from '../components/ui/AppButton';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SectionTitle } from '../components/ui/SectionTitle';
@@ -18,6 +20,11 @@ import { generateListingText } from '../lib/generateListing';
 import type { ContentLocale } from '../lib/locale';
 import { getStrings } from '../lib/locale';
 import { getMarketplaceLinks } from '../lib/marketplaceLinks';
+import {
+  ItemPhotosError,
+  saveItemPhotosToGallery,
+  shareItemPhotos,
+} from '../lib/shareItemPhotos';
 import { colors, radii, screenContent, typography } from '../lib/theme';
 import type { ItemRecord } from '../types/item';
 
@@ -50,6 +57,8 @@ export function SellScreen({
     item.listingDescription ?? '',
   );
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSharingPhotos, setIsSharingPhotos] = useState(false);
+  const [isSavingPhotos, setIsSavingPhotos] = useState(false);
 
   useEffect(() => {
     setListingTitle(item.listingTitle ?? '');
@@ -57,6 +66,8 @@ export function SellScreen({
   }, [item.id, item.listingTitle, item.listingDescription]);
 
   const hasListing = listingTitle.trim().length > 0;
+  const hasPhotos = item.photos.length > 0;
+  const showExpoGoSaveHint = Platform.OS === 'android' && isRunningInExpoGo();
 
   async function openLink(url: string) {
     await Linking.openURL(url);
@@ -85,6 +96,61 @@ export function SellScreen({
     }
   }
 
+  async function handleSharePhotos() {
+    if (!hasPhotos) {
+      Alert.alert(strings.sharePhotos, strings.noPhotosToShare);
+      return;
+    }
+
+    setIsSharingPhotos(true);
+
+    try {
+      await shareItemPhotos(item.photos, strings.sharePhotos);
+    } catch (error) {
+      if (error instanceof ItemPhotosError && error.code === 'NO_PHOTOS') {
+        Alert.alert(strings.sharePhotos, strings.noPhotosToShare);
+        return;
+      }
+
+      const message =
+        error instanceof Error ? error.message : strings.genericError;
+      console.error('Photo share failed:', error);
+      Alert.alert(strings.photosShareFailedTitle, message);
+    } finally {
+      setIsSharingPhotos(false);
+    }
+  }
+
+  async function handleSavePhotos() {
+    if (!hasPhotos) {
+      Alert.alert(strings.savePhotosToGallery, strings.noPhotosToShare);
+      return;
+    }
+
+    setIsSavingPhotos(true);
+
+    try {
+      await saveItemPhotosToGallery(item.photos);
+      Alert.alert(strings.savePhotosToGallery, strings.photosSavedToGallery);
+    } catch (error) {
+      if (error instanceof ItemPhotosError && error.code === 'NO_PHOTOS') {
+        Alert.alert(strings.savePhotosToGallery, strings.noPhotosToShare);
+        return;
+      }
+      if (error instanceof ItemPhotosError && error.code === 'PERMISSION_DENIED') {
+        Alert.alert(strings.savePhotosToGallery, strings.photoLibraryPermission);
+        return;
+      }
+
+      const message =
+        error instanceof Error ? error.message : strings.genericError;
+      console.error('Photo save failed:', error);
+      Alert.alert(strings.photosSaveFailedTitle, message);
+    } finally {
+      setIsSavingPhotos(false);
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <ScreenHeader
@@ -93,7 +159,58 @@ export function SellScreen({
         onBack={onBack}
       />
 
-      <Image source={{ uri: item.photoUri }} style={styles.preview} />
+      <View style={styles.workflowBox}>
+        <Text style={styles.workflowText}>{strings.sellWorkflowHint}</Text>
+      </View>
+
+      <SectionTitle>{strings.listingPhotosTitle}</SectionTitle>
+
+      {hasPhotos ? (
+        <ItemPhotoGallery photos={item.photos} locale={locale} />
+      ) : (
+        <Text style={styles.hint}>{strings.noPhotosToShare}</Text>
+      )}
+
+      <View style={styles.photoActions}>
+        <Pressable
+          style={[
+            styles.photoActionButton,
+            styles.photoActionPrimary,
+            (!hasPhotos || isSharingPhotos) && styles.photoActionDisabled,
+          ]}
+          onPress={() => void handleSharePhotos()}
+          disabled={!hasPhotos || isSharingPhotos}
+        >
+          {isSharingPhotos ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.photoActionPrimaryText}>{strings.sharePhotos}</Text>
+          )}
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.photoActionButton,
+            styles.photoActionSecondary,
+            (!hasPhotos || isSavingPhotos) && styles.photoActionDisabled,
+          ]}
+          onPress={() => void handleSavePhotos()}
+          disabled={!hasPhotos || isSavingPhotos}
+        >
+          {isSavingPhotos ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <Text style={styles.photoActionSecondaryText}>
+              {strings.savePhotosToGallery}
+            </Text>
+          )}
+        </Pressable>
+      </View>
+
+      {showExpoGoSaveHint ? (
+        <Text style={styles.expoGoHint}>{strings.savePhotosExpoGoHint}</Text>
+      ) : null}
+
       <Text style={styles.title}>{item.objectName}</Text>
       <Text style={styles.price}>~€{item.estimatedPriceEUR.toFixed(0)}</Text>
 
@@ -195,12 +312,63 @@ export function SellScreen({
 
 const styles = StyleSheet.create({
   content: screenContent,
-  preview: {
-    width: '100%',
-    height: 200,
-    borderRadius: radii.xl,
-    resizeMode: 'cover',
-    marginBottom: 12,
+  workflowBox: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: radii.md,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#c5daf5',
+  },
+  workflowText: {
+    ...typography.body,
+    color: colors.text,
+    lineHeight: 22,
+  },
+  photoActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  photoActionButton: {
+    flex: 1,
+    borderRadius: radii.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 46,
+  },
+  photoActionPrimary: {
+    backgroundColor: colors.primary,
+  },
+  photoActionSecondary: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  photoActionDisabled: {
+    opacity: 0.55,
+  },
+  photoActionPrimaryText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  photoActionSecondaryText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  expoGoHint: {
+    ...typography.hint,
+    color: colors.warningText,
+    backgroundColor: colors.warningBg,
+    borderRadius: radii.md,
+    padding: 10,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.warningBorder,
   },
   title: {
     fontSize: 20,

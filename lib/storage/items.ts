@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { copyAsync, deleteAsync, documentDirectory } from 'expo-file-system/legacy';
-import type { ItemRecord } from '../../types/item';
+import { normalizeItem, type ItemPhoto, type ItemRecord } from '../../types/item';
 
 export type CatalogRoomSummary = {
   roomId: string;
@@ -25,7 +25,11 @@ function parseStoredArray<T>(raw: string | null): T[] {
 
 export async function loadItems(): Promise<ItemRecord[]> {
   const raw = await AsyncStorage.getItem(ITEMS_KEY);
-  return parseStoredArray<ItemRecord>(raw);
+  const stored = parseStoredArray<unknown>(raw);
+
+  return stored
+    .map((entry) => normalizeItem(entry))
+    .filter((item): item is ItemRecord => item !== null);
 }
 
 async function saveItems(items: ItemRecord[]): Promise<void> {
@@ -37,9 +41,24 @@ export async function persistPhotoUri(sourceUri: string): Promise<string> {
     return sourceUri;
   }
 
-  const destination = `${documentDirectory}item-${Date.now()}.jpg`;
+  if (sourceUri.startsWith(documentDirectory)) {
+    return sourceUri;
+  }
+
+  const destination = `${documentDirectory}item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
   await copyAsync({ from: sourceUri, to: destination });
   return destination;
+}
+
+export async function persistItemPhotos(item: ItemRecord): Promise<ItemRecord> {
+  const photos = await Promise.all(
+    item.photos.map(async (photo) => {
+      const uri = await persistPhotoUri(photo.uri);
+      return uri === photo.uri ? photo : { ...photo, uri };
+    }),
+  );
+
+  return { ...item, photos };
 }
 
 export async function upsertItem(item: ItemRecord): Promise<ItemRecord> {
@@ -112,6 +131,10 @@ export async function deleteStoredPhoto(photoUri: string): Promise<void> {
   }
 }
 
+export async function deleteStoredPhotos(photos: ItemPhoto[]): Promise<void> {
+  await Promise.all(photos.map((photo) => deleteStoredPhoto(photo.uri)));
+}
+
 export async function deleteItemById(id: string): Promise<boolean> {
   const items = await loadItems();
   const item = items.find((entry) => entry.id === id);
@@ -120,7 +143,7 @@ export async function deleteItemById(id: string): Promise<boolean> {
     return false;
   }
 
-  await deleteStoredPhoto(item.photoUri);
+  await deleteStoredPhotos(item.photos);
   await saveItems(items.filter((entry) => entry.id !== id));
   return true;
 }
