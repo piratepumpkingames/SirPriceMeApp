@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Keyboard,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -13,6 +12,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import type { ContentLocale } from '../lib/locale';
 import { getStrings } from '../lib/locale';
 import { PRESET_ROOM_IDS, resolveRoomLabel } from '../lib/rooms';
@@ -30,28 +33,19 @@ type RoomPickerModalProps = {
 const shouldManualKeyboardLift =
   Platform.OS === 'android' && !isRunningInExpoGo();
 
-export function RoomPickerModal({
-  visible,
+function RoomPickerSheet({
   locale,
   customRooms = [],
   onSelect,
   onCreateCustomRoom,
   onCancel,
-}: RoomPickerModalProps) {
+}: Omit<RoomPickerModalProps, 'visible'>) {
   const strings = getStrings(locale);
+  const insets = useSafeAreaInsets();
   const [showNewRoomForm, setShowNewRoomForm] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    if (!visible) {
-      setShowNewRoomForm(false);
-      setNewRoomName('');
-      setIsSaving(false);
-      setKeyboardHeight(0);
-    }
-  }, [visible]);
 
   useEffect(() => {
     if (!shouldManualKeyboardLift || !showNewRoomForm) {
@@ -90,84 +84,116 @@ export function RoomPickerModal({
     }
   }
 
-  const newRoomForm = (
-    <View style={[styles.card, styles.cardForm]}>
-      <Text style={styles.title}>{strings.newRoomTitle}</Text>
-      <Text style={styles.hint}>{strings.newRoomHint}</Text>
-      <TextInput
-        style={styles.input}
-        value={newRoomName}
-        onChangeText={setNewRoomName}
-        placeholder={strings.newRoomPlaceholder}
-        autoFocus
-      />
-      <Pressable
-        style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-        onPress={() => void handleSaveNewRoom()}
-        disabled={isSaving}
-      >
-        <Text style={styles.saveButtonText}>{strings.saveRoom}</Text>
-      </Pressable>
-      <Pressable
-        style={styles.cancelButton}
-        onPress={() => setShowNewRoomForm(false)}
-      >
-        <Text style={styles.cancelButtonText}>{strings.back}</Text>
-      </Pressable>
-    </View>
-  );
+  const navBarPad = Math.max(insets.bottom, 8);
+  const keyboardLift =
+    keyboardHeight > 0 ? Math.max(0, keyboardHeight - insets.bottom) : 0;
+
+  if (showNewRoomForm) {
+    return (
+      <View style={styles.overlay}>
+        <View style={[styles.card, styles.cardForm, { marginBottom: keyboardLift }]}>
+          <Text style={styles.title}>{strings.newRoomTitle}</Text>
+          <Text style={styles.hint}>{strings.newRoomHint}</Text>
+          <TextInput
+            style={styles.input}
+            value={newRoomName}
+            onChangeText={setNewRoomName}
+            placeholder={strings.newRoomPlaceholder}
+            autoFocus
+          />
+          <Pressable
+            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            onPress={() => void handleSaveNewRoom()}
+            disabled={isSaving}
+          >
+            <Text style={styles.saveButtonText}>{strings.saveRoom}</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.cancelButton, { paddingBottom: navBarPad }]}
+            onPress={() => setShowNewRoomForm(false)}
+          >
+            <Text style={styles.cancelButtonText}>{strings.back}</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        {showNewRoomForm ? (
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={[
-              styles.formAvoider,
-              keyboardHeight > 0 && { marginBottom: keyboardHeight },
-            ]}
-          >
-            {newRoomForm}
-          </KeyboardAvoidingView>
-        ) : (
-          <View style={[styles.card, styles.cardList]}>
-            <Text style={styles.title}>{strings.pickRoom}</Text>
-            <Text style={styles.hint}>{strings.pickRoomHint}</Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              {(PRESET_ROOM_IDS ?? []).map((roomId) => (
-                <Pressable
-                  key={roomId}
-                  style={styles.roomOption}
-                  onPress={() => onSelect(roomId)}
-                >
-                  <Text style={styles.roomOptionText}>
-                    {resolveRoomLabel(roomId, locale, customRooms)}
-                  </Text>
-                </Pressable>
-              ))}
-              {customRooms.map((room) => (
-                <Pressable
-                  key={room.id}
-                  style={styles.roomOption}
-                  onPress={() => onSelect(room.id)}
-                >
-                  <Text style={styles.roomOptionText}>{room.label}</Text>
-                </Pressable>
-              ))}
-              <Pressable
-                style={styles.newRoomOption}
-                onPress={() => setShowNewRoomForm(true)}
-              >
-                <Text style={styles.newRoomOptionText}>{strings.newRoom}</Text>
-              </Pressable>
-            </ScrollView>
-            <Pressable style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.cancelButtonText}>{strings.back}</Text>
+    <View style={styles.overlay}>
+      <View style={[styles.card, styles.cardList]}>
+        <Text style={styles.title}>{strings.pickRoom}</Text>
+        <Text style={styles.hint}>{strings.pickRoomHint}</Text>
+        <ScrollView
+          style={styles.roomList}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+        >
+          {(PRESET_ROOM_IDS ?? []).map((roomId) => (
+            <Pressable
+              key={roomId}
+              style={styles.roomOption}
+              onPress={() => onSelect(roomId)}
+            >
+              <Text style={styles.roomOptionText}>
+                {resolveRoomLabel(roomId, locale, customRooms)}
+              </Text>
             </Pressable>
-          </View>
-        )}
+          ))}
+          {customRooms.map((room) => (
+            <Pressable
+              key={room.id}
+              style={styles.roomOption}
+              onPress={() => onSelect(room.id)}
+            >
+              <Text style={styles.roomOptionText}>{room.label}</Text>
+            </Pressable>
+          ))}
+          <Pressable
+            style={styles.newRoomOption}
+            onPress={() => setShowNewRoomForm(true)}
+          >
+            <Text style={styles.newRoomOptionText}>{strings.newRoom}</Text>
+          </Pressable>
+        </ScrollView>
+        <Pressable
+          style={[styles.cancelButton, { paddingBottom: navBarPad }]}
+          onPress={onCancel}
+        >
+          <Text style={styles.cancelButtonText}>{strings.back}</Text>
+        </Pressable>
       </View>
+    </View>
+  );
+}
+
+export function RoomPickerModal({
+  visible,
+  locale,
+  customRooms,
+  onSelect,
+  onCreateCustomRoom,
+  onCancel,
+}: RoomPickerModalProps) {
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      statusBarTranslucent
+      onRequestClose={onCancel}
+    >
+      <SafeAreaProvider>
+        {visible ? (
+          <RoomPickerSheet
+            locale={locale}
+            customRooms={customRooms}
+            onSelect={onSelect}
+            onCreateCustomRoom={onCreateCustomRoom}
+            onCancel={onCancel}
+          />
+        ) : null}
+      </SafeAreaProvider>
     </Modal>
   );
 }
@@ -182,7 +208,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    width: '100%',
     flexShrink: 0,
   },
   cardList: {
@@ -191,8 +219,8 @@ const styles = StyleSheet.create({
   cardForm: {
     width: '100%',
   },
-  formAvoider: {
-    width: '100%',
+  roomList: {
+    marginBottom: 8,
   },
   title: {
     fontSize: 20,
@@ -251,8 +279,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   cancelButton: {
-    marginTop: 16,
-    paddingVertical: 12,
+    marginTop: 8,
+    paddingTop: 12,
     alignItems: 'center',
   },
   cancelButtonText: {

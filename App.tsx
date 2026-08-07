@@ -11,6 +11,10 @@ import {
   Text,
   View,
 } from 'react-native';
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+} from 'react-native-safe-area-context';
 import { ItemPhotoGallery } from './components/ItemPhotoGallery';
 import { AnalyzingOverlay } from './components/ui/AnalyzingOverlay';
 import { AppButton } from './components/ui/AppButton';
@@ -647,7 +651,8 @@ export default function App() {
   }
 
   return (
-    <>
+    <SafeAreaProvider>
+      <>
       {screen === 'home' ? renderHome() : null}
       {screen === 'result' && currentItem ? (
         <ItemDetailScreen
@@ -762,29 +767,32 @@ export default function App() {
       />
 
       <Modal visible={showCamera} animationType="slide">
-        <View style={styles.cameraContainer}>
-          <CameraView
-            ref={cameraRef}
-            facing="back"
-            style={styles.camera}
-            onCameraReady={() => setIsCameraReady(true)}
-          />
-          <View style={styles.cameraControls}>
-            <Button
-              title={strings.cameraCancel}
-              onPress={() => setShowCamera(false)}
+        <SafeAreaProvider>
+          <View style={styles.cameraContainer}>
+            <CameraView
+              ref={cameraRef}
+              facing="back"
+              style={styles.camera}
+              onCameraReady={() => setIsCameraReady(true)}
             />
-            <Button
-              title={strings.cameraCapture}
-              onPress={capturePhoto}
-              disabled={!isCameraReady}
-            />
+            <SafeAreaView edges={['bottom']} style={styles.cameraControls}>
+              <Button
+                title={strings.cameraCancel}
+                onPress={() => setShowCamera(false)}
+              />
+              <Button
+                title={strings.cameraCapture}
+                onPress={capturePhoto}
+                disabled={!isCameraReady}
+              />
+            </SafeAreaView>
           </View>
-        </View>
+        </SafeAreaProvider>
       </Modal>
 
       <StatusBar style="auto" />
-    </>
+      </>
+    </SafeAreaProvider>
   );
 }
 
