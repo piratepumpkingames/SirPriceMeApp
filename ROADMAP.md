@@ -2,9 +2,12 @@
 
 ## Next up
 
-- *(Nothing queued — see **Later** for optional ideas.)*
+- **Play subscription:** Create and activate `sirpriceme_pro_yearly` → RevenueCat → Supabase proxy + scan quota.
+- **Monetization stack:** RevenueCat (yearly Pro) + Supabase Edge Function; 10 scans/month free; listing generation not counted.
 
 ## Done
+
+- **Play setup (partial):** Internal testing, app access declarations, privacy policy URL live at [privacy.html](https://piratepumpkingames.github.io/SirPriceMeApp/privacy.html).
 
 - **Sell photo handoff:** Share photos, save to gallery, full photo gallery on Sell screen, workflow hint.
 - **Insurance IDs + multi-photo:** Barcode scan, serial/model fields, multiple photos per item, PDF export of IDs.
@@ -15,7 +18,15 @@
 
 ## Before public Play Store release
 
-> **Reminder:** Move Gemini API calls behind a small backend proxy.
+> **Reminder:** Keep `docs/privacy.html` and Play Console **Varnost podatkov** (Data safety) in sync.
+
+Whenever you add or change data handling (Supabase proxy, RevenueCat, Sentry, scan quotas, etc.):
+
+1. Update `docs/privacy.html`, `docs/data-deletion.html`, and the “Zadnja posodobitev” date at the top.
+2. Update the **Varnost podatkov** form in Play Console so it matches the privacy policy (same data types, purposes, third parties, retention).
+3. Re-check the privacy policy URL in **Pravilnik o zasebnosti** if the page path changes.
+
+> **Reminder:** Move Gemini API calls behind a small backend proxy (Supabase Edge Function + RevenueCat entitlement check).
 
 Today the app uses `EXPO_PUBLIC_GEMINI_API_KEY`, which is embedded in the client bundle at build time. That is fine for personal preview APKs and Expo Go development, but **not** safe for a public Play Store app — anyone can extract the key from the APK.
 
