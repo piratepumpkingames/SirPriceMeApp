@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="sl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pravilnik o zasebnosti – SirPriceMe</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --text: #1a1a1a;
+        --muted: #555;
+        --border: #e5e5e5;
+        --bg: #fafafa;
+        --card: #fff;
+        --link: #1a5fb4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      article {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 28px 24px;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+        margin: 0 0 8px;
+      }
+
+      h2 {
+        font-size: 1.125rem;
+        margin: 28px 0 12px;
+      }
+
+      p,
+      li {
+        color: var(--text);
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin-bottom: 24px;
+      }
+
+      a {
+        color: var(--link);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+        margin: 12px 0;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f5f5f5;
+      }
+
+      hr {
+        border: 0;
+        border-top: 1px solid var(--border);
+        margin: 36px 0;
+      }
+
+      footer {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Pravilnik o zasebnosti – SirPriceMe</h1>
+        <p class="meta">Zadnja posodobitev: avgust 2026</p>
+
+        <h2>1. Uvod</h2>
+        <p>
+          SirPriceMe (»aplikacija«) pomaga ocenjevati rabljene predmete s
+          fotografijami in umetno inteligenco. Upravljavec podatkov:
+          <strong>Pirate Pumpkin Games</strong>, kontakt:
+          <a href="mailto:piratepumpkin.games@gmail.com"
+            >piratepumpkin.games@gmail.com</a
+          >.
+        </p>
+
+        <h2>2. Katere podatke obdelujemo</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Vrsta podatkov</th>
+              <th>Namen</th>
+              <th>Kje se obdelujejo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fotografije predmetov</td>
+              <td>AI analiza (ime, stanje, ocena cene)</td>
+              <td>
+                Pošljejo se na naš strežnik, nato Google Gemini. Fotografij ne
+                shranjujemo v oblaku.
+              </td>
+            </tr>
+            <tr>
+              <td>Podatki kataloga (predmeti, cene, sobe, opombe)</td>
+              <td>Osebni katalog v aplikaciji</td>
+              <td>Samo na vaši napravi</td>
+            </tr>
+            <tr>
+              <td>Jezik in regija</td>
+              <td>Prilagoditev AI odgovorov</td>
+              <td>Na napravi in v zahtevi za analizo</td>
+            </tr>
+            <tr>
+              <td>Anonimni ID aplikacije</td>
+              <td>
+                Kvota brezplačnih skenov, povezava z naročnino Pro
+              </td>
+              <td>Aplikacija, RevenueCat</td>
+            </tr>
+            <tr>
+              <td>Podatki o nakupu naročnine Pro</td>
+              <td>Letna naročnina</td>
+              <td>Google Play in RevenueCat (podatkov o plačilni kartici ne hranimo mi)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>3. Brez računa SirPriceMe</h2>
+        <p>
+          Aplikacija ne zahteva registracije ali prijave v SirPriceMe. Nakup
+          naročnine Pro poteka prek računa Google Play na vaši napravi.
+        </p>
+
+        <h2>4. Tretje osebe</h2>
+        <ul>
+          <li>
+            <strong>Google (Gemini)</strong> – obdelava fotografij za AI analizo.
+            <a href="https://policies.google.com/privacy" rel="noopener noreferrer"
+              >Pravilnik o zasebnosti Google</a
+            >
+          </li>
+          <li><strong>Google Play</strong> – plačila in naročnine</li>
+          <li>
+            <strong>RevenueCat</strong> – upravljanje naročnin.
+            <a href="https://www.revenuecat.com/privacy" rel="noopener noreferrer"
+              >Pravilnik o zasebnosti RevenueCat</a
+            >
+          </li>
+          <li>
+            <strong>Supabase</strong> – naš strežnik za varno posredovanje AI
+            klicev (brez shranjevanja fotografij)
+          </li>
+        </ul>
+
+        <h2>5. Dovoljenja naprave</h2>
+        <ul>
+          <li><strong>Kamera</strong> – fotografiranje predmetov</li>
+          <li>
+            <strong>Galerija</strong> (po potrebi) – izbira ali shranjevanje
+            fotografij
+          </li>
+        </ul>
+
+        <h2>6. Hramba in varnost</h2>
+        <p>
+          Katalog ostane na napravi. Fotografije za AI analizo se obdelajo in se
+          ne hranijo na našem strežniku. Povezave s strežnikom so šifrirane
+          (HTTPS).
+        </p>
+
+        <h2>7. Vaše pravice (GDPR)</h2>
+        <p>
+          Za podatke, shranjene na napravi, lahko podatke izbrišete z odstranitvijo
+          aplikacije ali brisanjem podatkov aplikacije v nastavitvah naprave. Za
+          naročnine upravljajte nakupe v trgovini Google Play. Za vprašanja pišite
+          na
+          <a href="mailto:piratepumpkin.games@gmail.com"
+            >piratepumpkin.games@gmail.com</a
+          >.
+        </p>
+
+        <h2>8. Otroci</h2>
+        <p>
+          Aplikacija ni namenjena otrokom mlajšim od 13 let in namerno ne zbiramo
+          njihovih podatkov.
+        </p>
+
+        <h2>9. Spremembe</h2>
+        <p>
+          Ta pravilnik lahko občasno posodobimo. Datum zadnje spremembe bo
+          naveden na tej strani.
+        </p>
+
+        <hr />
+
+        <h1 lang="en">Privacy Policy – SirPriceMe</h1>
+        <p class="meta" lang="en">Last updated: August 2026</p>
+
+        <p lang="en">
+          SirPriceMe helps you estimate used items from photos using AI. Data
+          controller: <strong>Pirate Pumpkin Games</strong>,
+          <a href="mailto:piratepumpkin.games@gmail.com"
+            >piratepumpkin.games@gmail.com</a
+          >.
+        </p>
+
+        <p lang="en">
+          When you run an AI scan, photos are sent to our server and processed by
+          Google Gemini. We do not store photos in the cloud. Your catalog stays
+          on your device. Pro subscriptions are handled by Google Play and
+          RevenueCat; SirPriceMe does not require a separate app account.
+        </p>
+
+        <p lang="en">
+          For privacy requests, contact
+          <a href="mailto:piratepumpkin.games@gmail.com"
+            >piratepumpkin.games@gmail.com</a
+          >.
+        </p>
+
+        <footer>
+          SirPriceMe · Pirate Pumpkin Games ·
+          <a href="mailto:piratepumpkin.games@gmail.com"
+            >piratepumpkin.games@gmail.com</a
+          >
+        </footer>
+      </article>
+    </main>
+  </body>
+</html>
