@@ -26,6 +26,7 @@ import { ManageRoomsModal } from './components/ManageRoomsModal';
 import { MarkSoldModal } from './components/MarkSoldModal';
 import { RoomPickerModal } from './components/RoomPickerModal';
 import { analyzeItemPhoto } from './lib/analyzeItem';
+import { initializePurchases } from './lib/purchases';
 import {
   formatString,
   getDeviceLocale,
@@ -118,6 +119,7 @@ export default function App() {
   }, [catalogItems, customRooms]);
 
   useEffect(() => {
+    void initializePurchases();
     void refreshCatalog();
     void refreshCustomRooms();
     void isPdfExportHintDismissed().then((dismissed) => {
