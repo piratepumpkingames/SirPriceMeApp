@@ -25,8 +25,10 @@ type RoomPickerModalProps = {
   visible: boolean;
   locale: ContentLocale;
   customRooms: CustomRoom[];
+  canCreateCustomRooms: boolean;
   onSelect: (roomId: string) => void;
   onCreateCustomRoom: (label: string) => Promise<CustomRoom>;
+  onRequirePro: () => void;
   onCancel: () => void;
 };
 
@@ -36,8 +38,10 @@ const shouldManualKeyboardLift =
 function RoomPickerSheet({
   locale,
   customRooms = [],
+  canCreateCustomRooms,
   onSelect,
   onCreateCustomRoom,
+  onRequirePro,
   onCancel,
 }: Omit<RoomPickerModalProps, 'visible'>) {
   const strings = getStrings(locale);
@@ -151,7 +155,14 @@ function RoomPickerSheet({
           ))}
           <Pressable
             style={styles.newRoomOption}
-            onPress={() => setShowNewRoomForm(true)}
+            onPress={() => {
+              if (!canCreateCustomRooms) {
+                onRequirePro();
+                return;
+              }
+
+              setShowNewRoomForm(true);
+            }}
           >
             <Text style={styles.newRoomOptionText}>{strings.newRoom}</Text>
           </Pressable>
@@ -171,8 +182,10 @@ export function RoomPickerModal({
   visible,
   locale,
   customRooms,
+  canCreateCustomRooms,
   onSelect,
   onCreateCustomRoom,
+  onRequirePro,
   onCancel,
 }: RoomPickerModalProps) {
   return (
@@ -188,8 +201,10 @@ export function RoomPickerModal({
           <RoomPickerSheet
             locale={locale}
             customRooms={customRooms}
+            canCreateCustomRooms={canCreateCustomRooms}
             onSelect={onSelect}
             onCreateCustomRoom={onCreateCustomRoom}
+            onRequirePro={onRequirePro}
             onCancel={onCancel}
           />
         ) : null}

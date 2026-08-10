@@ -10,6 +10,10 @@ function encodeQuery(query: string): string {
   return encodeURIComponent(query.trim());
 }
 
+function encodeBolhaKeywords(query: string): string {
+  return encodeQuery(query).replace(/%20/g, '+');
+}
+
 function linksForRegion(
   searchQuery: string,
   regionCode: string,
@@ -22,7 +26,7 @@ function linksForRegion(
       {
         id: 'bolha',
         label: 'Bolha.com',
-        url: `https://www.bolha.com/iskalnik?keywords=${encoded}`,
+        url: `https://www.bolha.com/search/?keywords=${encodeBolhaKeywords(searchQuery)}`,
       },
       {
         id: 'facebook',

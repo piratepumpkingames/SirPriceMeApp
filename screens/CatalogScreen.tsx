@@ -39,10 +39,12 @@ type CatalogScreenProps = {
   locale: ContentLocale;
   customRooms: CustomRoom[];
   showPdfExportHint: boolean;
+  canExportPdf: boolean;
   onDismissPdfHint: () => void;
   onBack: () => void;
   onSelectItem: (item: ItemRecord) => void;
   onManageRooms: () => void;
+  onRequirePro: () => void;
 };
 
 export function CatalogScreen({
@@ -50,10 +52,12 @@ export function CatalogScreen({
   locale,
   customRooms,
   showPdfExportHint,
+  canExportPdf,
   onDismissPdfHint,
   onBack,
   onSelectItem,
   onManageRooms,
+  onRequirePro,
 }: CatalogScreenProps) {
   const strings = getStrings(locale);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
@@ -104,6 +108,12 @@ export function CatalogScreen({
   }
 
   async function handleSharePdf() {
+    if (!canExportPdf) {
+      Alert.alert(strings.sharePdf, strings.proOnlyPdf);
+      onRequirePro();
+      return;
+    }
+
     if (catalogItems.length === 0) {
       Alert.alert(strings.sharePdf, strings.catalogEmpty);
       return;
@@ -134,6 +144,12 @@ export function CatalogScreen({
   }
 
   async function handleSavePdf() {
+    if (!canExportPdf) {
+      Alert.alert(strings.savePdfToPhone, strings.proOnlyPdf);
+      onRequirePro();
+      return;
+    }
+
     if (catalogItems.length === 0) {
       Alert.alert(strings.savePdfToPhone, strings.catalogEmpty);
       return;

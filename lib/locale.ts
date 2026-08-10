@@ -168,6 +168,26 @@ type UiStrings = {
   photoLibraryPermission: string;
   noPhotosToShare: string;
   savePhotosExpoGoHint: string;
+  proPaywallTitle: string;
+  proPaywallBody: string;
+  proFeatureUnlimitedScans: string;
+  proFeaturePdf: string;
+  proFeatureCustomRooms: string;
+  proSubscribe: string;
+  proRestore: string;
+  proClose: string;
+  proPurchaseSuccess: string;
+  proPurchaseFailedTitle: string;
+  proRestoreSuccess: string;
+  proRestoreNone: string;
+  scanLimitReachedTitle: string;
+  scanLimitReachedMessage: string;
+  scansRemaining: string;
+  proOnlyPdf: string;
+  proOnlyCustomRooms: string;
+  proPriceUnavailable: string;
+  proPurchasing: string;
+  proRestoring: string;
 };
 
 const LOCALE_NAMES: Record<ContentLocale, string> = {
@@ -377,6 +397,27 @@ export const ui: Record<ContentLocale, UiStrings> = {
     noPhotosToShare: 'This item has no photos.',
     savePhotosExpoGoHint:
       'In Expo Go, use Share photos. Save to gallery works fully in the installed APK.',
+    proPaywallTitle: 'SirPriceMe Pro',
+    proPaywallBody: 'Unlock unlimited AI scans and premium catalog tools.',
+    proFeatureUnlimitedScans: 'Unlimited AI photo scans every month',
+    proFeaturePdf: 'Export your catalog as PDF',
+    proFeatureCustomRooms: 'Create custom rooms in your catalog',
+    proSubscribe: 'Subscribe yearly',
+    proRestore: 'Restore purchases',
+    proClose: 'Not now',
+    proPurchaseSuccess: 'Welcome to SirPriceMe Pro!',
+    proPurchaseFailedTitle: 'Purchase failed',
+    proRestoreSuccess: 'Your Pro subscription is active.',
+    proRestoreNone: 'No active subscription was found for this Google account.',
+    scanLimitReachedTitle: 'Free scan limit reached',
+    scanLimitReachedMessage:
+      'You have used all {limit} free AI scans this month. Upgrade to Pro for unlimited scans.',
+    scansRemaining: '{remaining} of {limit} free scans left this month',
+    proOnlyPdf: 'PDF export is a Pro feature.',
+    proOnlyCustomRooms: 'Custom rooms are a Pro feature.',
+    proPriceUnavailable: 'Subscription price unavailable',
+    proPurchasing: 'Opening Google Play…',
+    proRestoring: 'Restoring purchases…',
   },
   sl: {
     subtitle: 'Fotografirajte predmet in ocenite njegovo vrednost',
@@ -557,6 +598,27 @@ export const ui: Record<ContentLocale, UiStrings> = {
     noPhotosToShare: 'Ta predmet nima fotografij.',
     savePhotosExpoGoHint:
       'V Expo Go uporabite Deli fotografije. Shranjevanje v galerijo deluje v nameščeni APK aplikaciji.',
+    proPaywallTitle: 'SirPriceMe Pro',
+    proPaywallBody: 'Odklenite neomejene AI sken in premium orodja za katalog.',
+    proFeatureUnlimitedScans: 'Neomejeni AI foto skeni vsak mesec',
+    proFeaturePdf: 'Izvoz kataloga v PDF',
+    proFeatureCustomRooms: 'Ustvarjanje lastnih prostorov v katalogu',
+    proSubscribe: 'Letna naročnina',
+    proRestore: 'Obnovi nakupe',
+    proClose: 'Ne zdaj',
+    proPurchaseSuccess: 'Dobrodošli v SirPriceMe Pro!',
+    proPurchaseFailedTitle: 'Nakup ni uspel',
+    proRestoreSuccess: 'Vaša Pro naročnina je aktivna.',
+    proRestoreNone: 'Za ta Google račun ni aktivne naročnine.',
+    scanLimitReachedTitle: 'Porabili ste brezplačne skene',
+    scanLimitReachedMessage:
+      'Porabili ste vseh {limit} brezplačnih AI skenov ta mesec. Nadgradite na Pro za neomejene skene.',
+    scansRemaining: 'Še {remaining} od {limit} brezplačnih skenov ta mesec',
+    proOnlyPdf: 'Izvoz PDF je Pro funkcija.',
+    proOnlyCustomRooms: 'Lastni prostori so Pro funkcija.',
+    proPriceUnavailable: 'Cena naročnine ni na voljo',
+    proPurchasing: 'Odpiram Google Play…',
+    proRestoring: 'Obnavljam nakupe…',
   },
   hr: {
     subtitle: 'Fotografirajte predmet i procijenite njegovu vrijednost',
@@ -737,6 +799,27 @@ export const ui: Record<ContentLocale, UiStrings> = {
     noPhotosToShare: 'Ovaj predmet nema fotografija.',
     savePhotosExpoGoHint:
       'U Expo Go koristite Podijeli fotografije. Spremanje u galeriju radi u instaliranoj APK aplikaciji.',
+    proPaywallTitle: 'SirPriceMe Pro',
+    proPaywallBody: 'Otključajte neograničene AI skenove i premium alate kataloga.',
+    proFeatureUnlimitedScans: 'Neograničeni AI foto skenovi svaki mjesec',
+    proFeaturePdf: 'Izvoz kataloga u PDF',
+    proFeatureCustomRooms: 'Stvaranje vlastitih prostorija u katalogu',
+    proSubscribe: 'Godišnja pretplata',
+    proRestore: 'Vrati kupnje',
+    proClose: 'Ne sada',
+    proPurchaseSuccess: 'Dobrodošli u SirPriceMe Pro!',
+    proPurchaseFailedTitle: 'Kupnja nije uspjela',
+    proRestoreSuccess: 'Vaša Pro pretplata je aktivna.',
+    proRestoreNone: 'Nema aktivne pretplate za ovaj Google račun.',
+    scanLimitReachedTitle: 'Iskoristili ste besplatne skenove',
+    scanLimitReachedMessage:
+      'Iskoristili ste svih {limit} besplatnih AI skenova ovaj mjesec. Nadogradite na Pro za neograničene skenove.',
+    scansRemaining: 'Još {remaining} od {limit} besplatnih skenova ovaj mjesec',
+    proOnlyPdf: 'PDF izvoz je Pro funkcija.',
+    proOnlyCustomRooms: 'Vlastite prostorije su Pro funkcija.',
+    proPriceUnavailable: 'Cijena pretplate nije dostupna',
+    proPurchasing: 'Otvaram Google Play…',
+    proRestoring: 'Vraćam kupnje…',
   },
   de: {
     subtitle: 'Fotografieren Sie einen Gegenstand und schätzen Sie den Wert',
@@ -917,6 +1000,27 @@ export const ui: Record<ContentLocale, UiStrings> = {
     noPhotosToShare: 'Dieser Artikel hat keine Fotos.',
     savePhotosExpoGoHint:
       'In Expo Go Fotos teilen verwenden. Galerie-Speichern funktioniert in der installierten APK.',
+    proPaywallTitle: 'SirPriceMe Pro',
+    proPaywallBody: 'Schalten Sie unbegrenzte KI-Scans und Premium-Katalogtools frei.',
+    proFeatureUnlimitedScans: 'Unbegrenzte KI-Fotoscans pro Monat',
+    proFeaturePdf: 'Katalog als PDF exportieren',
+    proFeatureCustomRooms: 'Eigene Räume im Katalog anlegen',
+    proSubscribe: 'Jahresabo',
+    proRestore: 'Käufe wiederherstellen',
+    proClose: 'Nicht jetzt',
+    proPurchaseSuccess: 'Willkommen bei SirPriceMe Pro!',
+    proPurchaseFailedTitle: 'Kauf fehlgeschlagen',
+    proRestoreSuccess: 'Ihr Pro-Abo ist aktiv.',
+    proRestoreNone: 'Für dieses Google-Konto wurde kein aktives Abo gefunden.',
+    scanLimitReachedTitle: 'Kostenloses Scan-Limit erreicht',
+    scanLimitReachedMessage:
+      'Sie haben alle {limit} kostenlosen KI-Scans in diesem Monat verbraucht. Upgraden Sie auf Pro für unbegrenzte Scans.',
+    scansRemaining: 'Noch {remaining} von {limit} kostenlosen Scans in diesem Monat',
+    proOnlyPdf: 'PDF-Export ist eine Pro-Funktion.',
+    proOnlyCustomRooms: 'Eigene Räume sind eine Pro-Funktion.',
+    proPriceUnavailable: 'Abo-Preis nicht verfügbar',
+    proPurchasing: 'Google Play wird geöffnet…',
+    proRestoring: 'Käufe werden wiederhergestellt…',
   },
 };
 

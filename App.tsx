@@ -25,8 +25,17 @@ import { EditItemModal, type ItemEditDraft } from './components/EditItemModal';
 import { ManageRoomsModal } from './components/ManageRoomsModal';
 import { MarkSoldModal } from './components/MarkSoldModal';
 import { RoomPickerModal } from './components/RoomPickerModal';
+import { ProPaywallModal } from './components/ProPaywallModal';
 import { analyzeItemPhoto } from './lib/analyzeItem';
-import { initializePurchases } from './lib/purchases';
+import {
+  initializePurchases,
+  isProSubscriber,
+} from './lib/purchases';
+import {
+  canPerformScan,
+  getScanUsage,
+  recordScan,
+} from './lib/scanQuota';
 import {
   formatString,
   getDeviceLocale,
@@ -91,6 +100,9 @@ export default function App() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMarkSoldModal, setShowMarkSoldModal] = useState(false);
   const [showManageRoomsModal, setShowManageRoomsModal] = useState(false);
+  const [showProPaywall, setShowProPaywall] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+  const [scanUsage, setScanUsage] = useState({ used: 0, limit: 10, remaining: 10 });
   const [showPdfExportHint, setShowPdfExportHint] = useState(false);
   const [sellReturnScreen, setSellReturnScreen] = useState<'result' | 'itemDetail'>(
     'result',
@@ -119,13 +131,23 @@ export default function App() {
   }, [catalogItems, customRooms]);
 
   useEffect(() => {
-    void initializePurchases();
+    void initializePurchases().then(() => refreshSubscriptionState());
     void refreshCatalog();
     void refreshCustomRooms();
     void isPdfExportHintDismissed().then((dismissed) => {
       setShowPdfExportHint(!dismissed);
     });
   }, []);
+
+  async function refreshSubscriptionState() {
+    const [pro, usage] = await Promise.all([isProSubscriber(), getScanUsage()]);
+    setIsPro(pro);
+    setScanUsage(usage);
+  }
+
+  function openProPaywall() {
+    setShowProPaywall(true);
+  }
 
   async function refreshCatalog() {
     const items = await loadItems();
@@ -207,6 +229,17 @@ export default function App() {
       return;
     }
 
+    if (!(await canPerformScan(isPro))) {
+      Alert.alert(
+        strings.scanLimitReachedTitle,
+        formatString(strings.scanLimitReachedMessage, {
+          limit: String(scanUsage.limit),
+        }),
+      );
+      openProPaywall();
+      return;
+    }
+
     const primaryPhoto = pendingPhotos[0];
     setIsAnalyzing(true);
     setErrorMessage(null);
@@ -221,6 +254,8 @@ export default function App() {
       const item = await saveItem(
         createItemFromAnalysis(analysis, pendingPhotos),
       );
+      await recordScan(isPro);
+      await refreshSubscriptionState();
       setPendingPhotos([]);
       setCurrentItem(item);
       setScreen('result');
@@ -569,6 +604,15 @@ export default function App() {
             />
           ) : null}
 
+          {!isPro ? (
+            <Text style={styles.scanQuota}>
+              {formatString(strings.scansRemaining, {
+                remaining: String(scanUsage.remaining),
+                limit: String(scanUsage.limit),
+              })}
+            </Text>
+          ) : null}
+
           <Text style={styles.languageLabel}>{strings.languageLabel}</Text>
           <View style={styles.languageRow}>
             <Pressable
@@ -717,10 +761,20 @@ export default function App() {
           locale={contentLocale}
           customRooms={customRooms}
           showPdfExportHint={showPdfExportHint}
+          canExportPdf={isPro}
           onDismissPdfHint={() => void handleDismissPdfHint()}
           onBack={() => setScreen(catalogReturnScreen)}
           onSelectItem={openCatalogItem}
-          onManageRooms={() => setShowManageRoomsModal(true)}
+          onManageRooms={() => {
+            if (!isPro) {
+              Alert.alert(strings.manageRooms, strings.proOnlyCustomRooms);
+              openProPaywall();
+              return;
+            }
+
+            setShowManageRoomsModal(true);
+          }}
+          onRequirePro={openProPaywall}
         />
       ) : null}
 
@@ -734,8 +788,10 @@ export default function App() {
         visible={showRoomPicker}
         locale={contentLocale}
         customRooms={customRooms}
+        canCreateCustomRooms={isPro}
         onSelect={(roomId) => void handleRoomSelect(roomId)}
         onCreateCustomRoom={handleCreateCustomRoom}
+        onRequirePro={openProPaywall}
         onCancel={() => setShowRoomPicker(false)}
       />
       <EditItemModal
@@ -760,6 +816,12 @@ export default function App() {
         onRenameRoom={handleRenameRoom}
         onDeleteRoom={handleDeleteRoom}
         onClose={() => setShowManageRoomsModal(false)}
+      />
+      <ProPaywallModal
+        visible={showProPaywall}
+        locale={contentLocale}
+        onClose={() => setShowProPaywall(false)}
+        onProActivated={() => void refreshSubscriptionState()}
       />
 
       <AnalyzingOverlay
@@ -826,6 +888,12 @@ const styles = StyleSheet.create({
   },
   catalogLinkText: {
     ...typography.link,
+  },
+  scanQuota: {
+    ...typography.hint,
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+    width: '100%',
   },
   languageLabel: {
     ...typography.label,
