@@ -101,7 +101,7 @@
     <main>
       <article>
         <h1>Pravilnik o zasebnosti – SirPriceMe</h1>
-        <p class="meta">Zadnja posodobitev: avgust 2026</p>
+        <p class="meta">Zadnja posodobitev: 11. avgust 2026</p>
 
         <h2>1. Uvod</h2>
         <p>
@@ -125,10 +125,11 @@
           <tbody>
             <tr>
               <td>Fotografije predmetov</td>
-              <td>AI analiza (ime, stanje, ocena cene)</td>
+              <td>AI analiza (ime, stanje, ocena cene) in generiranje besedila oglasa</td>
               <td>
-                Pošljejo se na naš strežnik, nato Google Gemini. Fotografij ne
-                shranjujemo v oblaku.
+                Pošljejo se prek našega strežnika (Supabase) na Google Gemini za
+                obdelavo. Fotografij ne shranjujemo v oblaku – obdelamo jih in
+                jih ne hranimo na strežniku.
               </td>
             </tr>
             <tr>
@@ -139,14 +140,17 @@
             <tr>
               <td>Jezik in regija</td>
               <td>Prilagoditev AI odgovorov</td>
-              <td>Na napravi in v zahtevi za analizo</td>
+              <td>Na napravi; pošlje se v zahtevi za AI obdelavo</td>
             </tr>
             <tr>
-              <td>Anonimni ID aplikacije</td>
+              <td>Anonimni ID aplikacije in števec mesečnih AI skenov</td>
               <td>
-                Kvota brezplačnih skenov, povezava z naročnino Pro
+                Kvota brezplačnih skenov (10/mesec), preverjanje naročnine Pro
               </td>
-              <td>Aplikacija, RevenueCat</td>
+              <td>
+                Aplikacija (lokalno), Supabase (števec skenov), RevenueCat
+                (naročnina)
+              </td>
             </tr>
             <tr>
               <td>Podatki o nakupu naročnine Pro</td>
@@ -162,28 +166,45 @@
           naročnine Pro poteka prek računa Google Play na vaši napravi.
         </p>
 
-        <h2>4. Tretje osebe</h2>
+        <h2>4. Tretje osebe (obdelovalci)</h2>
         <ul>
           <li>
-            <strong>Google (Gemini)</strong> – obdelava fotografij za AI analizo.
+            <strong>Supabase</strong> – gostovanje našega strežnika (Edge
+            Functions) za varno posredovanje AI klicev, hrambo anonimnega ID-ja
+            in mesečnega števca skenov. Fotografij ne shranjuje.
+            <a href="https://supabase.com/privacy" rel="noopener noreferrer"
+              >Pravilnik o zasebnosti Supabase</a
+            >
+          </li>
+          <li>
+            <strong>Google (Gemini)</strong> – obdelava fotografij in besedila
+            za AI analizo ter generiranje oglasa.
             <a href="https://policies.google.com/privacy" rel="noopener noreferrer"
               >Pravilnik o zasebnosti Google</a
             >
           </li>
           <li><strong>Google Play</strong> – plačila in naročnine</li>
           <li>
-            <strong>RevenueCat</strong> – upravljanje naročnin.
+            <strong>RevenueCat</strong> – upravljanje naročnin in preverjanje
+            statusa Pro.
             <a href="https://www.revenuecat.com/privacy" rel="noopener noreferrer"
               >Pravilnik o zasebnosti RevenueCat</a
             >
           </li>
+        </ul>
+
+        <h2>5. Kaj se ne zbira</h2>
+        <ul>
+          <li>Brez registracije ali računa SirPriceMe</li>
+          <li>Brez shranjevanja fotografij na našem strežniku</li>
+          <li>Brez prodaje osebnih podatkov tretjim osebam</li>
           <li>
-            <strong>Supabase</strong> – naš strežnik za varno posredovanje AI
-            klicev (brez shranjevanja fotografij)
+            Generiranje besedila oglasa (naslov/opis) se ne šteje v kvoto
+            brezplačnih AI skenov
           </li>
         </ul>
 
-        <h2>5. Dovoljenja naprave</h2>
+        <h2>6. Dovoljenja naprave</h2>
         <ul>
           <li><strong>Kamera</strong> – fotografiranje predmetov</li>
           <li>
@@ -192,14 +213,25 @@
           </li>
         </ul>
 
-        <h2>6. Hramba in varnost</h2>
+        <h2>7. Hramba in varnost</h2>
         <p>
-          Katalog ostane na napravi. Fotografije za AI analizo se obdelajo in se
-          ne hranijo na našem strežniku. Povezave s strežnikom so šifrirane
-          (HTTPS).
+          Katalog ostane na napravi. Na strežniku hranimo le anonimni ID
+          aplikacije in mesečni števec AI skenov (brez vsebine fotografij).
+          Fotografije se obdelajo in se ne hranijo v oblaku. Povezave s
+          strežnikom so šifrirane (HTTPS).
         </p>
+        <ul>
+          <li>
+            <strong>Števec skenov:</strong> hranimo do izbrisa po vaši zahtevi;
+            mesečni števec se sicer ponastavi vsak koledarski mesec (UTC).
+          </li>
+          <li>
+            <strong>Tehnični dnevniki strežnika:</strong> največ 30 dni (brez
+            vsebine fotografij).
+          </li>
+        </ul>
 
-        <h2>7. Vaše pravice (GDPR)</h2>
+        <h2>8. Vaše pravice (GDPR)</h2>
         <p>
           Za podatke, shranjene na napravi, lahko podatke izbrišete z odstranitvijo
           aplikacije ali brisanjem podatkov aplikacije v nastavitvah naprave. Za
@@ -211,13 +243,13 @@
           >.
         </p>
 
-        <h2>8. Otroci</h2>
+        <h2>9. Otroci</h2>
         <p>
           Aplikacija ni namenjena otrokom mlajšim od 13 let in namerno ne zbiramo
           njihovih podatkov.
         </p>
 
-        <h2>9. Spremembe</h2>
+        <h2>10. Spremembe</h2>
         <p>
           Ta pravilnik lahko občasno posodobimo. Datum zadnje spremembe bo
           naveden na tej strani.
@@ -226,8 +258,9 @@
         <hr />
 
         <h1 lang="en">Privacy Policy – SirPriceMe</h1>
-        <p class="meta" lang="en">Last updated: August 2026</p>
+        <p class="meta" lang="en">Last updated: 11 August 2026</p>
 
+        <h2 lang="en">Summary</h2>
         <p lang="en">
           SirPriceMe helps you estimate used items from photos using AI. Data
           controller: <strong>Pirate Pumpkin Games</strong>,
@@ -236,18 +269,98 @@
           >.
         </p>
 
+        <h2 lang="en">Data we process</h2>
+        <table lang="en">
+          <thead>
+            <tr>
+              <th>Data type</th>
+              <th>Purpose</th>
+              <th>Where processed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Item photos</td>
+              <td>AI analysis (name, condition, price) and listing text generation</td>
+              <td>
+                Sent via our server (Supabase) to Google Gemini for processing.
+                We do not store photos in the cloud.
+              </td>
+            </tr>
+            <tr>
+              <td>Catalog data (items, prices, rooms, notes)</td>
+              <td>Personal catalog</td>
+              <td>On your device only</td>
+            </tr>
+            <tr>
+              <td>Language and region</td>
+              <td>Localised AI responses</td>
+              <td>On device; sent in AI requests</td>
+            </tr>
+            <tr>
+              <td>Anonymous app ID and monthly AI scan count</td>
+              <td>Free scan quota (10/month), Pro subscription check</td>
+              <td>App (local), Supabase (scan count), RevenueCat (subscription)</td>
+            </tr>
+            <tr>
+              <td>Pro subscription purchase data</td>
+              <td>Yearly subscription</td>
+              <td>Google Play and RevenueCat (we do not store payment card data)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 lang="en">Third parties</h2>
+        <ul lang="en">
+          <li>
+            <strong>Supabase</strong> – hosts our backend (Edge Functions) for
+            secure AI proxying and stores the anonymous app ID and monthly scan
+            count. Does not store photos.
+            <a href="https://supabase.com/privacy" rel="noopener noreferrer"
+              >Supabase Privacy Policy</a
+            >
+          </li>
+          <li>
+            <strong>Google (Gemini)</strong> – processes photos and text for AI
+            analysis and listing generation.
+            <a href="https://policies.google.com/privacy" rel="noopener noreferrer"
+              >Google Privacy Policy</a
+            >
+          </li>
+          <li><strong>Google Play</strong> – payments and subscriptions</li>
+          <li>
+            <strong>RevenueCat</strong> – subscription management and Pro status.
+            <a href="https://www.revenuecat.com/privacy" rel="noopener noreferrer"
+              >RevenueCat Privacy Policy</a
+            >
+          </li>
+        </ul>
+
+        <h2 lang="en">What we do not collect</h2>
+        <ul lang="en">
+          <li>No SirPriceMe account or registration</li>
+          <li>No cloud storage of your photos on our servers</li>
+          <li>No sale of personal data to third parties</li>
+          <li>Listing text generation does not count toward the free AI scan quota</li>
+        </ul>
+
+        <h2 lang="en">Retention and security</h2>
         <p lang="en">
-          When you run an AI scan, photos are sent to our server and processed by
-          Google Gemini. We do not store photos in the cloud. Your catalog stays
-          on your device. Pro subscriptions are handled by Google Play and
-          RevenueCat; SirPriceMe does not require a separate app account.
+          Your catalog stays on your device. On our servers we only store an
+          anonymous app ID and a monthly AI scan counter (no photo content).
+          Connections use HTTPS. Server logs are retained for up to 30 days and
+          do not contain photo content.
         </p>
 
+        <h2 lang="en">Your rights</h2>
         <p lang="en">
-          For privacy requests, contact
+          Delete on-device data by uninstalling the app or clearing app data. For
+          server-side deletion (scan quota records), use our
+          <a href="data-deletion.html">data deletion request process</a>. Contact
           <a href="mailto:piratepumpkin.games@gmail.com"
             >piratepumpkin.games@gmail.com</a
-          >.
+          >
+          with questions.
         </p>
 
         <footer>

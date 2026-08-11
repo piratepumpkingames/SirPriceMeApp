@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ScanUsageSnapshot } from './aiBackend';
+import { fetchScanStatus, isAiBackendConfigured } from './aiBackend';
 
 export const FREE_SCANS_PER_MONTH = 10;
 
@@ -39,6 +41,18 @@ export async function getScanUsage(): Promise<{
   limit: number;
   remaining: number;
 }> {
+  if (isAiBackendConfigured()) {
+    try {
+      const serverUsage = await fetchScanStatus();
+
+      if (serverUsage) {
+        return applyServerScanUsage(serverUsage);
+      }
+    } catch (error) {
+      console.warn('Scan status fetch failed, using local cache.', error);
+    }
+  }
+
   const usage = await loadUsage();
   const limit = FREE_SCANS_PER_MONTH;
 
@@ -46,6 +60,22 @@ export async function getScanUsage(): Promise<{
     used: usage.count,
     limit,
     remaining: Math.max(0, limit - usage.count),
+  };
+}
+
+export async function applyServerScanUsage(
+  usage: ScanUsageSnapshot,
+): Promise<{ used: number; limit: number; remaining: number }> {
+  const month = currentMonthKey();
+  await AsyncStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ month, count: usage.used }),
+  );
+
+  return {
+    used: usage.used,
+    limit: usage.limit,
+    remaining: usage.remaining,
   };
 }
 
@@ -59,7 +89,7 @@ export async function canPerformScan(isPro: boolean): Promise<boolean> {
 }
 
 export async function recordScan(isPro: boolean): Promise<void> {
-  if (isPro) {
+  if (isPro || isAiBackendConfigured()) {
     return;
   }
 

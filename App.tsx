@@ -26,12 +26,13 @@ import { ManageRoomsModal } from './components/ManageRoomsModal';
 import { MarkSoldModal } from './components/MarkSoldModal';
 import { RoomPickerModal } from './components/RoomPickerModal';
 import { ProPaywallModal } from './components/ProPaywallModal';
-import { analyzeItemPhoto } from './lib/analyzeItem';
+import { analyzeItemPhoto, AiBackendError } from './lib/analyzeItem';
 import {
   initializePurchases,
   isProSubscriber,
 } from './lib/purchases';
 import {
+  applyServerScanUsage,
   canPerformScan,
   getScanUsage,
   recordScan,
@@ -245,21 +246,47 @@ export default function App() {
     setErrorMessage(null);
 
     try {
-      const analysis = await analyzeItemPhoto(
+      const result = await analyzeItemPhoto(
         primaryPhoto.uri,
         primaryPhoto.mimeType,
         contentLocale,
         regionCode,
       );
       const item = await saveItem(
-        createItemFromAnalysis(analysis, pendingPhotos),
+        createItemFromAnalysis(result.analysis, pendingPhotos),
       );
-      await recordScan(isPro);
-      await refreshSubscriptionState();
+
+      if (result.usage) {
+        const usage = await applyServerScanUsage(result.usage);
+        setScanUsage(usage);
+      } else {
+        await recordScan(isPro);
+        await refreshSubscriptionState();
+      }
+
       setPendingPhotos([]);
       setCurrentItem(item);
       setScreen('result');
     } catch (error) {
+      if (
+        error instanceof AiBackendError &&
+        error.code === 'scan_limit_exceeded'
+      ) {
+        if (error.usage) {
+          const usage = await applyServerScanUsage(error.usage);
+          setScanUsage(usage);
+        }
+
+        Alert.alert(
+          strings.scanLimitReachedTitle,
+          formatString(strings.scanLimitReachedMessage, {
+            limit: String(scanUsage.limit),
+          }),
+        );
+        openProPaywall();
+        return;
+      }
+
       const message =
         error instanceof Error ? error.message : strings.genericError;
       console.error('Analyze failed:', error);

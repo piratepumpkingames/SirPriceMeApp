@@ -1,6 +1,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
 import {
+  AiBackendError,
+  fetchPhotoAnalysis,
+  isAiBackendConfigured,
+  type ScanUsageSnapshot,
+} from './aiBackend';
+import {
   getLanguageNameForAI,
   getRegionNameForAI,
   type ContentLocale,
@@ -12,6 +18,11 @@ export type AnalysisResult = {
   estimatedPriceEUR: number;
   explanation: string;
   marketplaceSearchQuery: string;
+};
+
+export type AnalyzeItemPhotoResult = {
+  analysis: AnalysisResult;
+  usage?: ScanUsageSnapshot;
 };
 
 function buildAnalysisPrompt(contentLocale: ContentLocale, regionCode: string) {
@@ -33,7 +44,6 @@ Rules:
 - If unsure about price, provide your best single-number estimate.`;
 }
 
-// New Google AI Studio projects cannot use 2.5 models; see Google deprecations docs.
 const GEMINI_MODEL = 'gemini-3.1-flash-lite';
 
 function parseAnalysisResponse(text: string): AnalysisResult {
@@ -60,11 +70,11 @@ function formatError(error: unknown): string {
   return String(error);
 }
 
-export async function analyzeItemPhoto(
+async function analyzeItemPhotoLocally(
   photoUri: string,
-  mimeType = 'image/jpeg',
-  contentLocale: ContentLocale = 'en',
-  regionCode = 'US',
+  mimeType: string,
+  contentLocale: ContentLocale,
+  regionCode: string,
 ): Promise<AnalysisResult> {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
@@ -119,3 +129,47 @@ export async function analyzeItemPhoto(
 
   return parseAnalysisResponse(text);
 }
+
+export async function analyzeItemPhoto(
+  photoUri: string,
+  mimeType = 'image/jpeg',
+  contentLocale: ContentLocale = 'en',
+  regionCode = 'US',
+): Promise<AnalyzeItemPhotoResult> {
+  if (isAiBackendConfigured()) {
+    const base64 = await readAsStringAsync(photoUri, {
+      encoding: EncodingType.Base64,
+    });
+
+    try {
+      const payload = await fetchPhotoAnalysis({
+        imageBase64: base64,
+        mimeType,
+        contentLocale,
+        regionCode,
+      });
+
+      return {
+        analysis: payload.analysis,
+        usage: payload.usage,
+      };
+    } catch (error) {
+      if (error instanceof AiBackendError) {
+        throw error;
+      }
+
+      throw new Error(formatError(error));
+    }
+  }
+
+  const analysis = await analyzeItemPhotoLocally(
+    photoUri,
+    mimeType,
+    contentLocale,
+    regionCode,
+  );
+
+  return { analysis };
+}
+
+export { AiBackendError };

@@ -2,13 +2,15 @@
 
 ## Next up
 
-- **Play subscription:** Create and activate `sirpriceme_pro_yearly` → RevenueCat → Supabase proxy + scan quota.
-- **Monetization stack:** RevenueCat (yearly Pro) + Supabase Edge Function; 10 scans/month free; listing generation not counted.
+- **Supabase deploy:** Create project, `supabase db push`, deploy `analyze`, `generate-listing`, `scan-status`, set secrets — see [docs/supabase-setup.md](docs/supabase-setup.md).
+- **Production build:** Ship AAB **without** `EXPO_PUBLIC_GEMINI_API_KEY`; Supabase env vars only.
+- **Privacy sync:** Update `docs/privacy.html` + Play **Varnost podatkov** when backend goes live.
 
 ## Done
 
+- **Supabase code (in repo):** Edge Functions (Gemini proxy, RevenueCat Pro check, scan quota), client `lib/aiBackend.ts`, server-authoritative quota when configured.
+- **Paywall + Pro gating:** RevenueCat yearly `sirpriceme_pro_yearly`, PDF export, custom rooms, client/server scan limits.
 - **Play setup (partial):** Internal testing, app access declarations, privacy policy URL live at [privacy.html](https://piratepumpkingames.github.io/SirPriceMeApp/privacy.html).
-
 - **Sell photo handoff:** Share photos, save to gallery, full photo gallery on Sell screen, workflow hint.
 - **Insurance IDs + multi-photo:** Barcode scan, serial/model fields, multiple photos per item, PDF export of IDs.
 - **UX polish batch (6–9):** Shared design language, catalog item detail screen, empty states & hints, analyzing overlay.
@@ -25,18 +27,6 @@ Whenever you add or change data handling (Supabase proxy, RevenueCat, Sentry, sc
 1. Update `docs/privacy.html`, `docs/data-deletion.html`, and the “Zadnja posodobitev” date at the top.
 2. Update the **Varnost podatkov** form in Play Console so it matches the privacy policy (same data types, purposes, third parties, retention).
 3. Re-check the privacy policy URL in **Pravilnik o zasebnosti** if the page path changes.
-
-> **Reminder:** Move Gemini API calls behind a small backend proxy (Supabase Edge Function + RevenueCat entitlement check).
-
-Today the app uses `EXPO_PUBLIC_GEMINI_API_KEY`, which is embedded in the client bundle at build time. That is fine for personal preview APKs and Expo Go development, but **not** safe for a public Play Store app — anyone can extract the key from the APK.
-
-When preparing for release:
-
-1. Add a lightweight backend (e.g. Expo API route, Cloud Function, or small server) that holds the Gemini key server-side.
-2. Have the app send the photo (or a signed upload URL flow) to *your* backend; the backend calls Gemini and returns the JSON result.
-3. Remove `EXPO_PUBLIC_GEMINI_API_KEY` from client builds; use auth/rate limits on the backend if needed.
-
-Ask in a chat: *"remind me about the backend proxy for the Gemini key"* — this file is the source of truth.
 
 ## Later (optional)
 

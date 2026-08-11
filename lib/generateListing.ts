@@ -1,5 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
+  fetchListingGeneration,
+  isAiBackendConfigured,
+} from './aiBackend';
+import {
   getLanguageNameForAI,
   getRegionNameForAI,
   type ContentLocale,
@@ -71,7 +75,7 @@ function formatError(error: unknown): string {
   return String(error);
 }
 
-export async function generateListingText(
+async function generateListingTextLocally(
   item: ListingInput,
   contentLocale: ContentLocale,
   regionCode: string,
@@ -118,4 +122,22 @@ export async function generateListingText(
   }
 
   return parseListingResponse(text);
+}
+
+export async function generateListingText(
+  item: ListingInput,
+  contentLocale: ContentLocale,
+  regionCode: string,
+): Promise<ListingResult> {
+  if (isAiBackendConfigured()) {
+    const payload = await fetchListingGeneration({
+      item,
+      contentLocale,
+      regionCode,
+    });
+
+    return payload.listing;
+  }
+
+  return generateListingTextLocally(item, contentLocale, regionCode);
 }
