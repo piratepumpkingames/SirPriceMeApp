@@ -2,7 +2,7 @@
   "expo": {
     "name": "SirPriceMe",
     "slug": "SirPriceMeApp",
-    "version": "1.0.4",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -18,6 +18,10 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
       ],
       "package": "com.piratepumpkin.SirPriceMeApp",
       "versionCode": 2,
@@ -49,7 +53,8 @@
         {
           "photosPermission": "SirPriceMe saves item photos to your gallery so you can attach them when creating marketplace listings.",
           "savePhotosPermission": "SirPriceMe saves item photos to your gallery so you can attach them when creating marketplace listings.",
-          "isAccessMediaLocationEnabled": false
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": ["photo"]
         }
       ]
     ],
