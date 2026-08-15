@@ -32,6 +32,7 @@ type EditItemModalProps = {
   locale: ContentLocale;
   onSave: (draft: ItemEditDraft) => void;
   onCancel: () => void;
+  onDelete?: () => void;
 };
 
 export function EditItemModal({
@@ -40,6 +41,7 @@ export function EditItemModal({
   locale,
   onSave,
   onCancel,
+  onDelete,
 }: EditItemModalProps) {
   const strings = getStrings(locale);
   const [objectName, setObjectName] = useState('');
@@ -189,6 +191,11 @@ export function EditItemModal({
             <Pressable style={styles.cancelButton} onPress={onCancel}>
               <Text style={styles.cancelButtonText}>{strings.cancel}</Text>
             </Pressable>
+            {onDelete ? (
+              <Pressable style={styles.deleteButton} onPress={onDelete}>
+                <Text style={styles.deleteButtonText}>{strings.deleteItem}</Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
       </Modal>
@@ -293,5 +300,15 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: colors.textSecondary,
     fontSize: 16,
+  },
+  deleteButton: {
+    marginTop: 4,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: colors.danger,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -1,13 +1,15 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { ItemPhotoGallery } from '../components/ItemPhotoGallery';
-import { AppButton } from '../components/ui/AppButton';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { AppHeader, type AppHeaderAction } from '../components/ui/AppHeader';
+import { AppIcon } from '../components/ui/AppIcon';
+import { BottomActionBar } from '../components/ui/BottomActionBar';
+import { ScreenLayout } from '../components/ui/ScreenLayout';
 import { SectionTitle } from '../components/ui/SectionTitle';
 import { StatusChip } from '../components/ui/StatusChip';
 import type { ContentLocale } from '../lib/locale';
 import { getStrings } from '../lib/locale';
 import { resolveRoomLabel } from '../lib/rooms';
-import { colors, screenContent, typography } from '../lib/theme';
+import { colors, typography } from '../lib/theme';
 import type { CustomRoom } from '../lib/storage/customRooms';
 import { hasIdentification, type ItemRecord } from '../types/item';
 
@@ -25,9 +27,6 @@ type ItemDetailScreenProps = {
   onEdit: () => void;
   onAddPhoto: () => void;
   onRemovePhoto: (index: number) => void;
-  onMarkSold: () => void;
-  onUnmarkSold: () => void;
-  onDeleteItem: () => void;
   onOpenCatalog: () => void;
   onScanAnother: () => void;
 };
@@ -44,9 +43,6 @@ export function ItemDetailScreen({
   onEdit,
   onAddPhoto,
   onRemovePhoto,
-  onMarkSold,
-  onUnmarkSold,
-  onDeleteItem,
   onOpenCatalog,
   onScanAnother,
 }: ItemDetailScreenProps) {
@@ -55,12 +51,57 @@ export function ItemDetailScreen({
     ? (item.soldPriceEUR ?? item.estimatedPriceEUR)
     : item.estimatedPriceEUR;
 
-  return (
-    <ScrollView contentContainerStyle={styles.content}>
-      {mode === 'catalog' ? (
-        <ScreenHeader backLabel={strings.back} onBack={onBack} />
-      ) : null}
+  const headerTitle =
+    mode === 'scan' ? strings.scanResultTitle : item.objectName;
 
+  const headerActions: AppHeaderAction[] = [
+    {
+      icon: <AppIcon name="list-outline" size="lg" />,
+      accessibilityLabel: strings.myCatalog,
+      onPress: onOpenCatalog,
+    },
+    {
+      icon: <AppIcon name="camera-outline" size="lg" />,
+      accessibilityLabel: strings.scanAnother,
+      onPress: onScanAnother,
+    },
+    {
+      icon: <AppIcon name="create-outline" size="lg" />,
+      accessibilityLabel: strings.editItem,
+      onPress: onEdit,
+    },
+  ];
+
+  const footer = !item.soldAt ? (
+    item.inCatalog ? (
+      <BottomActionBar
+        primaryLabel={strings.sellThisItem}
+        onPrimaryPress={onSell}
+        secondaryLabel={strings.removeFromCatalog}
+        onSecondaryPress={onRemoveFromCatalog}
+      />
+    ) : (
+      <BottomActionBar
+        primaryLabel={strings.addToCatalog}
+        onPrimaryPress={onAddToCatalog}
+        secondaryLabel={strings.sellThisItem}
+        onSecondaryPress={onSell}
+      />
+    )
+  ) : null;
+
+  return (
+    <ScreenLayout
+      header={
+        <AppHeader
+          title={headerTitle}
+          backLabel={strings.back}
+          onBack={onBack}
+          actions={headerActions}
+        />
+      }
+      footer={footer}
+    >
       <ItemPhotoGallery
         photos={item.photos}
         locale={locale}
@@ -126,69 +167,11 @@ export function ItemDetailScreen({
           ) : null}
         </>
       ) : null}
-
-      <SectionTitle>{strings.itemActionsSection}</SectionTitle>
-
-      <AppButton label={strings.editItem} variant="ghost" onPress={onEdit} />
-
-      {!item.soldAt ? (
-        <AppButton label={strings.sellThisItem} onPress={onSell} />
-      ) : null}
-
-      {item.soldAt ? (
-        <AppButton
-          label={strings.unmarkAsSold}
-          variant="secondary"
-          onPress={onUnmarkSold}
-        />
-      ) : (
-        <AppButton
-          label={strings.markAsSold}
-          variant="success"
-          onPress={onMarkSold}
-        />
-      )}
-
-      {item.inCatalog ? (
-        <AppButton
-          label={strings.removeFromCatalog}
-          variant="danger"
-          onPress={onRemoveFromCatalog}
-        />
-      ) : (
-        <AppButton
-          label={strings.addToCatalog}
-          variant="secondary"
-          onPress={onAddToCatalog}
-        />
-      )}
-
-      <AppButton
-        label={strings.deleteItem}
-        variant="danger"
-        onPress={onDeleteItem}
-      />
-
-      {mode === 'scan' ? (
-        <>
-          <AppButton
-            label={strings.myCatalog}
-            variant="secondary"
-            onPress={onOpenCatalog}
-          />
-          <AppButton
-            label={strings.scanAnother}
-            variant="ghost"
-            onPress={onScanAnother}
-          />
-        </>
-      ) : null}
-    </ScrollView>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  content: screenContent,
   title: {
     fontSize: 24,
     fontWeight: 'bold',

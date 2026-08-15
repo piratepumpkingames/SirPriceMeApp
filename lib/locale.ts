@@ -26,6 +26,8 @@ type UiStrings = {
   sellThisItem: string;
   addToCatalog: string;
   back: string;
+  scanResultTitle: string;
+  moreActions: string;
   scanAnother: string;
   statusInCatalog: string;
   statusForSale: string;
@@ -183,6 +185,7 @@ type UiStrings = {
   scanLimitReachedTitle: string;
   scanLimitReachedMessage: string;
   scansRemaining: string;
+  upgradeToPro: string;
   proOnlyPdf: string;
   proOnlyCustomRooms: string;
   proPriceUnavailable: string;
@@ -244,6 +247,8 @@ export const ui: Record<ContentLocale, UiStrings> = {
     sellThisItem: 'Sell this item',
     addToCatalog: 'Add to catalog',
     back: 'Back',
+    scanResultTitle: 'Scan result',
+    moreActions: 'More actions',
     scanAnother: 'Scan another item',
     statusInCatalog: 'In catalog',
     statusForSale: 'For sale',
@@ -413,6 +418,7 @@ export const ui: Record<ContentLocale, UiStrings> = {
     scanLimitReachedMessage:
       'You have used all {limit} free AI scans this month. Upgrade to Pro for unlimited scans.',
     scansRemaining: '{remaining} of {limit} free scans left this month',
+    upgradeToPro: 'Go Pro',
     proOnlyPdf: 'PDF export is a Pro feature.',
     proOnlyCustomRooms: 'Custom rooms are a Pro feature.',
     proPriceUnavailable: 'Subscription price unavailable',
@@ -443,6 +449,8 @@ export const ui: Record<ContentLocale, UiStrings> = {
     sellThisItem: 'Prodaj predmet',
     addToCatalog: 'Dodaj v katalog',
     back: 'Nazaj',
+    scanResultTitle: 'Rezultat',
+    moreActions: 'Več dejanj',
     scanAnother: 'Scaniraj drug predmet',
     statusInCatalog: 'V katalogu',
     statusForSale: 'Za prodajo',
@@ -614,6 +622,7 @@ export const ui: Record<ContentLocale, UiStrings> = {
     scanLimitReachedMessage:
       'Porabili ste vseh {limit} brezplačnih AI skenov ta mesec. Nadgradite na Pro za neomejene skene.',
     scansRemaining: 'Še {remaining} od {limit} brezplačnih skenov ta mesec',
+    upgradeToPro: 'Nadgradi na Pro',
     proOnlyPdf: 'Izvoz PDF je Pro funkcija.',
     proOnlyCustomRooms: 'Lastni prostori so Pro funkcija.',
     proPriceUnavailable: 'Cena naročnine ni na voljo',
@@ -644,6 +653,8 @@ export const ui: Record<ContentLocale, UiStrings> = {
     sellThisItem: 'Prodaj predmet',
     addToCatalog: 'Dodaj u katalog',
     back: 'Natrag',
+    scanResultTitle: 'Rezultat',
+    moreActions: 'Više radnji',
     scanAnother: 'Skeniraj drugi predmet',
     statusInCatalog: 'U katalogu',
     statusForSale: 'Na prodaju',
@@ -815,6 +826,7 @@ export const ui: Record<ContentLocale, UiStrings> = {
     scanLimitReachedMessage:
       'Iskoristili ste svih {limit} besplatnih AI skenova ovaj mjesec. Nadogradite na Pro za neograničene skenove.',
     scansRemaining: 'Još {remaining} od {limit} besplatnih skenova ovaj mjesec',
+    upgradeToPro: 'Nadogradi na Pro',
     proOnlyPdf: 'PDF izvoz je Pro funkcija.',
     proOnlyCustomRooms: 'Vlastite prostorije su Pro funkcija.',
     proPriceUnavailable: 'Cijena pretplate nije dostupna',
@@ -845,6 +857,8 @@ export const ui: Record<ContentLocale, UiStrings> = {
     sellThisItem: 'Artikel verkaufen',
     addToCatalog: 'Zum Katalog hinzufügen',
     back: 'Zurück',
+    scanResultTitle: 'Scan-Ergebnis',
+    moreActions: 'Weitere Aktionen',
     scanAnother: 'Weiteren Artikel scannen',
     statusInCatalog: 'Im Katalog',
     statusForSale: 'Zu verkaufen',
@@ -1016,6 +1030,7 @@ export const ui: Record<ContentLocale, UiStrings> = {
     scanLimitReachedMessage:
       'Sie haben alle {limit} kostenlosen KI-Scans in diesem Monat verbraucht. Upgraden Sie auf Pro für unbegrenzte Scans.',
     scansRemaining: 'Noch {remaining} von {limit} kostenlosen Scans in diesem Monat',
+    upgradeToPro: 'Pro freischalten',
     proOnlyPdf: 'PDF-Export ist eine Pro-Funktion.',
     proOnlyCustomRooms: 'Eigene Räume sind eine Pro-Funktion.',
     proPriceUnavailable: 'Abo-Preis nicht verfügbar',

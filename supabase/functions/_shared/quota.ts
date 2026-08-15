@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
-export const FREE_SCANS_PER_MONTH = 10;
+export const FREE_SCANS_PER_MONTH = 5;
 
 export type ScanUsageSnapshot = {
   used: number;

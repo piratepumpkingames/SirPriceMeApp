@@ -54,9 +54,12 @@
           "photosPermission": "SirPriceMe saves item photos to your gallery so you can attach them when creating marketplace listings.",
           "savePhotosPermission": "SirPriceMe saves item photos to your gallery so you can attach them when creating marketplace listings.",
           "isAccessMediaLocationEnabled": false,
-          "granularPermissions": ["photo"]
+          "granularPermissions": [
+            "photo"
+          ]
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "eas": {

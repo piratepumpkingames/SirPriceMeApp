@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScanUsageSnapshot } from './aiBackend';
 import { fetchScanStatus, isAiBackendConfigured } from './aiBackend';
 
-export const FREE_SCANS_PER_MONTH = 10;
+export const FREE_SCANS_PER_MONTH = 5;
 
 const STORAGE_KEY = '@sirpriceme/scanUsage';
 

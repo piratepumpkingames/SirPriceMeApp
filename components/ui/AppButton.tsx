@@ -1,8 +1,10 @@
+import { AppIcon, type AppIconName } from './AppIcon';
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
+  View,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
@@ -13,6 +15,7 @@ type AppButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'ghost'
 
 type AppButtonProps = Omit<PressableProps, 'style'> & {
   label: string;
+  icon?: AppIconName;
   variant?: AppButtonVariant;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -20,6 +23,7 @@ type AppButtonProps = Omit<PressableProps, 'style'> & {
 
 export function AppButton({
   label,
+  icon,
   variant = 'primary',
   loading = false,
   disabled,
@@ -27,6 +31,7 @@ export function AppButton({
   ...props
 }: AppButtonProps) {
   const isDisabled = disabled || loading;
+  const textColor = textColors[variant];
 
   return (
     <Pressable
@@ -41,9 +46,12 @@ export function AppButton({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={textColors[variant]} />
+        <ActivityIndicator color={textColor} />
       ) : (
-        <Text style={[styles.label, { color: textColors[variant] }]}>{label}</Text>
+        <View style={styles.content}>
+          {icon ? <AppIcon name={icon} size="md" color={textColor} /> : null}
+          <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+        </View>
       )}
     </Pressable>
   );
@@ -87,6 +95,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     marginBottom: 10,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   label: {
     fontSize: 16,

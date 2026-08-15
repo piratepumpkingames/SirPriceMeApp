@@ -5,15 +5,15 @@ import {
   Image,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { AppButton } from '../components/ui/AppButton';
+import { AppHeader } from '../components/ui/AppHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { HintBanner } from '../components/ui/HintBanner';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { ScreenLayout } from '../components/ui/ScreenLayout';
 import { SectionTitle } from '../components/ui/SectionTitle';
 import { StatusChip } from '../components/ui/StatusChip';
 import {
@@ -24,7 +24,7 @@ import {
 import type { ContentLocale } from '../lib/locale';
 import { formatString, getStrings } from '../lib/locale';
 import { resolveRoomLabel } from '../lib/rooms';
-import { colors, radii, screenContent, typography } from '../lib/theme';
+import { colors, radii, typography } from '../lib/theme';
 import type { CustomRoom } from '../lib/storage/customRooms';
 import {
   getCatalogItems,
@@ -184,12 +184,15 @@ export function CatalogScreen({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <ScreenHeader
-        backLabel={strings.back}
-        title={strings.catalogTitle}
-        onBack={handleBack}
-      />
+    <ScreenLayout
+      header={
+        <AppHeader
+          title={strings.catalogTitle}
+          backLabel={strings.back}
+          onBack={handleBack}
+        />
+      }
+    >
 
       <Text style={styles.summary}>
         {formatString(strings.catalogSummary, {
@@ -314,12 +317,11 @@ export function CatalogScreen({
           ))}
         </>
       )}
-    </ScrollView>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  content: screenContent,
   summary: {
     fontSize: 16,
     color: colors.textSecondary,

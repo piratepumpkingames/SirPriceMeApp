@@ -175,16 +175,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primaryLight,
+    paddingHorizontal: 4,
   },
   addTileText: {
     color: colors.primary,
     fontSize: 24,
     fontWeight: '700',
     lineHeight: 26,
+    textAlign: 'center',
   },
   addTileLabel: {
     color: colors.primary,
     fontSize: 10,
     fontWeight: '600',
+    textAlign: 'center',
+    width: '100%',
+    lineHeight: 12,
   },
 });

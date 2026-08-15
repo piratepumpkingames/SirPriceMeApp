@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Linking,
   Platform,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -14,7 +11,11 @@ import { isRunningInExpoGo } from 'expo';
 import * as Clipboard from 'expo-clipboard';
 import { ItemPhotoGallery } from '../components/ItemPhotoGallery';
 import { AppButton } from '../components/ui/AppButton';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { AppHeader } from '../components/ui/AppHeader';
+import { CopyIconButton } from '../components/ui/CopyIconButton';
+import { IconActionButton } from '../components/ui/IconActionButton';
+import { MarketplaceLinkRow } from '../components/ui/MarketplaceLinkRow';
+import { ScreenLayout } from '../components/ui/ScreenLayout';
 import { SectionTitle } from '../components/ui/SectionTitle';
 import { generateListingText } from '../lib/generateListing';
 import type { ContentLocale } from '../lib/locale';
@@ -25,7 +26,7 @@ import {
   saveItemPhotosToGallery,
   shareItemPhotos,
 } from '../lib/shareItemPhotos';
-import { colors, radii, screenContent, typography } from '../lib/theme';
+import { colors, radii, typography } from '../lib/theme';
 import type { ItemRecord } from '../types/item';
 
 type SellScreenProps = {
@@ -152,12 +153,15 @@ export function SellScreen({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <ScreenHeader
-        backLabel={strings.back}
-        title={strings.sellTitle}
-        onBack={onBack}
-      />
+    <ScreenLayout
+      header={
+        <AppHeader
+          title={strings.sellTitle}
+          backLabel={strings.back}
+          onBack={onBack}
+        />
+      }
+    >
 
       <View style={styles.workflowBox}>
         <Text style={styles.workflowText}>{strings.sellWorkflowHint}</Text>
@@ -172,39 +176,22 @@ export function SellScreen({
       )}
 
       <View style={styles.photoActions}>
-        <Pressable
-          style={[
-            styles.photoActionButton,
-            styles.photoActionPrimary,
-            (!hasPhotos || isSharingPhotos) && styles.photoActionDisabled,
-          ]}
+        <IconActionButton
+          icon="share-outline"
+          label={strings.sharePhotos}
           onPress={() => void handleSharePhotos()}
-          disabled={!hasPhotos || isSharingPhotos}
-        >
-          {isSharingPhotos ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={styles.photoActionPrimaryText}>{strings.sharePhotos}</Text>
-          )}
-        </Pressable>
-
-        <Pressable
-          style={[
-            styles.photoActionButton,
-            styles.photoActionSecondary,
-            (!hasPhotos || isSavingPhotos) && styles.photoActionDisabled,
-          ]}
+          disabled={!hasPhotos}
+          loading={isSharingPhotos}
+          variant="primary"
+        />
+        <IconActionButton
+          icon="download-outline"
+          label={strings.savePhotosToGallery}
           onPress={() => void handleSavePhotos()}
-          disabled={!hasPhotos || isSavingPhotos}
-        >
-          {isSavingPhotos ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : (
-            <Text style={styles.photoActionSecondaryText}>
-              {strings.savePhotosToGallery}
-            </Text>
-          )}
-        </Pressable>
+          disabled={!hasPhotos}
+          loading={isSavingPhotos}
+          variant="secondary"
+        />
       </View>
 
       {showExpoGoSaveHint ? (
@@ -223,12 +210,10 @@ export function SellScreen({
           <Text selectable style={styles.listingText}>
             {listingTitle}
           </Text>
-          <Pressable
-            style={styles.copyButton}
+          <CopyIconButton
+            label={strings.copyTitle}
             onPress={() => void copyText(listingTitle)}
-          >
-            <Text style={styles.copyButtonText}>{strings.copyTitle}</Text>
-          </Pressable>
+          />
 
           <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
             {strings.listingDescriptionLabel}
@@ -236,39 +221,30 @@ export function SellScreen({
           <Text selectable style={styles.listingText}>
             {listingDescription}
           </Text>
-          <Pressable
-            style={styles.copyButton}
+          <CopyIconButton
+            label={strings.copyDescription}
             onPress={() => void copyText(listingDescription)}
-          >
-            <Text style={styles.copyButtonText}>{strings.copyDescription}</Text>
-          </Pressable>
+          />
 
           <AppButton
             label={strings.copyAll}
+            icon="copy-outline"
             onPress={() => void copyText(`${listingTitle}\n\n${listingDescription}`)}
+            variant="secondary"
             style={styles.copyAllButton}
           />
         </View>
       ) : null}
 
-      <Pressable
-        style={[styles.generateButton, isGenerating && styles.generateButtonDisabled]}
+      <AppButton
+        label={hasListing ? strings.regenerateListing : strings.generateListing}
+        icon="document-text-outline"
         onPress={() => void handleGenerateListing()}
         disabled={isGenerating}
-      >
-        {isGenerating ? (
-          <View style={styles.generateRow}>
-            <ActivityIndicator color={colors.white} />
-            <Text style={styles.generateButtonText}>
-              {strings.generatingListing}
-            </Text>
-          </View>
-        ) : (
-          <Text style={styles.generateButtonText}>
-            {hasListing ? strings.regenerateListing : strings.generateListing}
-          </Text>
-        )}
-      </Pressable>
+        loading={isGenerating}
+        variant="success"
+        style={styles.generateButton}
+      />
 
       <SectionTitle style={styles.sectionTitleSpaced}>{strings.whereToSell}</SectionTitle>
       <Text style={styles.hint}>{strings.marketplaceHint}</Text>
@@ -278,16 +254,16 @@ export function SellScreen({
         regionCode,
         locale,
       ).map((link) => (
-        <AppButton
+        <MarketplaceLinkRow
           key={link.id}
           label={link.label}
-          variant="secondary"
           onPress={() => void openLink(link.url)}
         />
       ))}
 
       <AppButton
         label={item.soldAt ? strings.unmarkAsSold : strings.markAsSold}
+        icon={item.soldAt ? 'refresh-outline' : 'checkmark-circle-outline'}
         variant={item.soldAt ? 'secondary' : 'success'}
         onPress={item.soldAt ? onUnmarkSold : onMarkSold}
         style={styles.topSpaced}
@@ -300,18 +276,20 @@ export function SellScreen({
               ? strings.unmarkAsListed
               : strings.markAsListed
           }
+          icon={
+            item.forSale && item.listedAt ? 'close-circle-outline' : 'pricetag-outline'
+          }
           variant={item.forSale && item.listedAt ? 'danger' : 'primary'}
           onPress={
             item.forSale && item.listedAt ? onUnmarkListed : onMarkListed
           }
         />
       ) : null}
-    </ScrollView>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  content: screenContent,
   workflowBox: {
     backgroundColor: colors.primaryLight,
     borderRadius: radii.md,
@@ -329,36 +307,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     marginBottom: 16,
-  },
-  photoActionButton: {
-    flex: 1,
-    borderRadius: radii.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 46,
-  },
-  photoActionPrimary: {
-    backgroundColor: colors.primary,
-  },
-  photoActionSecondary: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  photoActionDisabled: {
-    opacity: 0.55,
-  },
-  photoActionPrimaryText: {
-    color: colors.white,
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  photoActionSecondaryText: {
-    color: colors.primary,
-    fontWeight: '700',
-    fontSize: 14,
-    textAlign: 'center',
   },
   expoGoHint: {
     ...typography.hint,
@@ -406,42 +354,12 @@ const styles = StyleSheet.create({
   listingText: {
     ...typography.body,
   },
-  copyButton: {
-    alignSelf: 'flex-start',
-    marginTop: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: radii.sm,
-    backgroundColor: colors.primaryLight,
-  },
-  copyButtonText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
   copyAllButton: {
     marginTop: 12,
     marginBottom: 0,
   },
   generateButton: {
-    backgroundColor: colors.success,
-    borderRadius: radii.md,
-    paddingVertical: 14,
-    alignItems: 'center',
     marginBottom: 8,
-  },
-  generateButtonDisabled: {
-    opacity: 0.85,
-  },
-  generateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  generateButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '700',
   },
   sectionTitleSpaced: {
     marginTop: 8,

@@ -1,6 +1,6 @@
 # Supabase backend setup
 
-SirPriceMe uses Supabase Edge Functions as a **Gemini proxy** and **server-side scan quota** (10 free photo scans per month). Listing generation goes through the same backend but does **not** consume scan quota.
+SirPriceMe uses Supabase Edge Functions as a **Gemini proxy** and **server-side scan quota** (5 free photo scans per month). Listing generation goes through the same backend but does **not** consume scan quota.
 
 ## 1. Create a Supabase project
 
@@ -59,7 +59,7 @@ Keep `EXPO_PUBLIC_GEMINI_API_KEY` only for Expo Go / local dev without Supabase.
 1. Launch the app with Supabase env vars set.
 2. Home screen should show remaining scans from the server.
 3. Analyze a photo — quota increments on the server.
-4. After 10 scans in a calendar month (UTC), free users get the Pro paywall.
+4. After 5 scans in a calendar month (UTC), free users get the Pro paywall.
 
 ## 8. Privacy & Play Console
 

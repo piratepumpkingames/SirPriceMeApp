@@ -17,6 +17,7 @@ import {
 } from 'react-native-safe-area-context';
 import { ItemPhotoGallery } from './components/ItemPhotoGallery';
 import { AnalyzingOverlay } from './components/ui/AnalyzingOverlay';
+import { ScanQuotaBar } from './components/ui/ScanQuotaBar';
 import { AppButton } from './components/ui/AppButton';
 import { EmptyState } from './components/ui/EmptyState';
 import { HintBanner } from './components/ui/HintBanner';
@@ -103,7 +104,7 @@ export default function App() {
   const [showManageRoomsModal, setShowManageRoomsModal] = useState(false);
   const [showProPaywall, setShowProPaywall] = useState(false);
   const [isPro, setIsPro] = useState(false);
-  const [scanUsage, setScanUsage] = useState({ used: 0, limit: 10, remaining: 10 });
+  const [scanUsage, setScanUsage] = useState({ used: 0, limit: 5, remaining: 5 });
   const [showPdfExportHint, setShowPdfExportHint] = useState(false);
   const [sellReturnScreen, setSellReturnScreen] = useState<'result' | 'itemDetail'>(
     'result',
@@ -362,7 +363,7 @@ export default function App() {
       if (!updated.forSale) {
         Alert.alert(strings.alsoSellTitle, strings.alsoSellMessage, [
           { text: strings.no, style: 'cancel' },
-          { text: strings.yes, onPress: () => goToSell('result') },
+          { text: strings.yes, onPress: () => goToSell(resolveSellReturnScreen()) },
         ]);
       }
     } catch (error) {
@@ -579,6 +580,23 @@ export default function App() {
     return room;
   }
 
+  function resolveSellReturnScreen(): 'result' | 'itemDetail' {
+    if (screen === 'itemDetail') {
+      return 'itemDetail';
+    }
+
+    if (screen === 'sell') {
+      return sellReturnScreen;
+    }
+
+    return 'result';
+  }
+
+  /** Opens catalog without changing where catalog's back button goes. */
+  function openCatalogFromItemDetail() {
+    setScreen('catalog');
+  }
+
   function goToCatalog(from: Screen) {
     setCatalogReturnScreen(from);
     setScreen('catalog');
@@ -632,12 +650,14 @@ export default function App() {
           ) : null}
 
           {!isPro ? (
-            <Text style={styles.scanQuota}>
-              {formatString(strings.scansRemaining, {
+            <ScanQuotaBar
+              label={formatString(strings.scansRemaining, {
                 remaining: String(scanUsage.remaining),
                 limit: String(scanUsage.limit),
               })}
-            </Text>
+              upgradeLabel={strings.upgradeToPro}
+              onUpgrade={openProPaywall}
+            />
           ) : null}
 
           <Text style={styles.languageLabel}>{strings.languageLabel}</Text>
@@ -677,14 +697,13 @@ export default function App() {
           </View>
 
           <View style={styles.buttonRow}>
-            <AppButton
-              label={
-                pendingPhotos.length > 0 ? strings.addAnotherPhoto : strings.takePhoto
-              }
-              onPress={() => void takePhoto('pending')}
-              style={styles.fullWidthButton}
-            />
-            {pendingPhotos.length > 0 ? (
+            {pendingPhotos.length === 0 ? (
+              <AppButton
+                label={strings.takePhoto}
+                onPress={() => void takePhoto('pending')}
+                style={styles.fullWidthButton}
+              />
+            ) : (
               <AppButton
                 label={strings.analyze}
                 onPress={analyzePhoto}
@@ -692,7 +711,7 @@ export default function App() {
                 loading={isAnalyzing}
                 style={styles.fullWidthButton}
               />
-            ) : null}
+            )}
           </View>
 
           {pendingPhotos.length > 0 ? (
@@ -740,9 +759,6 @@ export default function App() {
           onEdit={() => setShowEditModal(true)}
           onAddPhoto={() => void handleAddPhotoToItem()}
           onRemovePhoto={(index) => void handleRemovePhotoFromItem(index)}
-          onMarkSold={() => setShowMarkSoldModal(true)}
-          onUnmarkSold={handleUnmarkSold}
-          onDeleteItem={handleDeleteItem}
           onOpenCatalog={() => goToCatalog('result')}
           onScanAnother={resetScan}
         />
@@ -760,10 +776,7 @@ export default function App() {
           onEdit={() => setShowEditModal(true)}
           onAddPhoto={() => void handleAddPhotoToItem()}
           onRemovePhoto={(index) => void handleRemovePhotoFromItem(index)}
-          onMarkSold={() => setShowMarkSoldModal(true)}
-          onUnmarkSold={handleUnmarkSold}
-          onDeleteItem={handleDeleteItem}
-          onOpenCatalog={() => goToCatalog('itemDetail')}
+          onOpenCatalog={openCatalogFromItemDetail}
           onScanAnother={resetScan}
         />
       ) : null}
@@ -827,6 +840,10 @@ export default function App() {
         locale={contentLocale}
         onSave={(draft) => void handleEditSave(draft)}
         onCancel={() => setShowEditModal(false)}
+        onDelete={() => {
+          setShowEditModal(false);
+          handleDeleteItem();
+        }}
       />
       <MarkSoldModal
         visible={showMarkSoldModal}
@@ -915,12 +932,6 @@ const styles = StyleSheet.create({
   },
   catalogLinkText: {
     ...typography.link,
-  },
-  scanQuota: {
-    ...typography.hint,
-    marginBottom: 12,
-    alignSelf: 'flex-start',
-    width: '100%',
   },
   languageLabel: {
     ...typography.label,
