@@ -2,7 +2,7 @@
   "expo": {
     "name": "SirPriceMe",
     "slug": "SirPriceMeApp",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -24,7 +24,7 @@
         "android.permission.READ_MEDIA_AUDIO"
       ],
       "package": "com.piratepumpkin.SirPriceMeApp",
-      "versionCode": 2,
+      "versionCode": 3,
       "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
