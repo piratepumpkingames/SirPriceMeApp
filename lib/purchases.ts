@@ -1,12 +1,41 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isRunningInExpoGo } from 'expo';
 import { Platform } from 'react-native';
-import Purchases, { LOG_LEVEL, type PurchasesPackage } from 'react-native-purchases';
+import Purchases, {
+  LOG_LEVEL,
+  type PurchasesOffering,
+  type PurchasesPackage,
+} from 'react-native-purchases';
 
 export const PRO_ENTITLEMENT_ID = 'pro';
-export const PRO_PRODUCT_ID = 'sirpriceme_pro_yearly';
+
+export const PRO_PRODUCT_IDS = {
+  monthly: 'sirpriceme_pro_monthly',
+  sixMonth: 'sirpriceme_pro_6month',
+  yearly: 'sirpriceme_pro_yearly',
+} as const;
+
+export type ProPlanId = keyof typeof PRO_PRODUCT_IDS;
+
+/** Marketing discounts vs paying month-by-month. */
+export const PRO_PLAN_DISCOUNTS: Record<ProPlanId, number | null> = {
+  monthly: null,
+  sixMonth: 25,
+  yearly: 50,
+};
+
+/** @deprecated Use PRO_PRODUCT_IDS.yearly */
+export const PRO_PRODUCT_ID = PRO_PRODUCT_IDS.yearly;
 
 const APP_USER_ID_KEY = '@sirpriceme/appUserId';
+const PRO_PLAN_ORDER: ProPlanId[] = ['monthly', 'sixMonth', 'yearly'];
+
+export type ProPlanOption = {
+  id: ProPlanId;
+  package: PurchasesPackage;
+  priceString: string;
+  discountPercent: number | null;
+};
 
 function createAnonymousId(): string {
   const suffix = Math.random().toString(36).slice(2, 11);
@@ -63,35 +92,109 @@ export async function isProSubscriber(): Promise<boolean> {
   }
 }
 
-export async function getYearlyPackage(): Promise<PurchasesPackage | null> {
+async function getCurrentOffering(): Promise<PurchasesOffering | null> {
   if (!isBillingAvailable()) {
     return null;
   }
 
   const offerings = await Purchases.getOfferings();
-  const current = offerings.current;
-
-  if (!current) {
-    return null;
-  }
-
-  return (
-    current.availablePackages.find((pkg) => pkg.identifier === '$rc_annual') ??
-    current.annual ??
-    current.availablePackages[0] ??
-    null
-  );
+  return offerings.current ?? null;
 }
 
-export async function purchaseYearlyPro(): Promise<boolean> {
-  const pkg = await getYearlyPackage();
+function resolvePlanPackage(
+  offering: PurchasesOffering,
+  planId: ProPlanId,
+): PurchasesPackage | null {
+  const productId = PRO_PRODUCT_IDS[planId];
+
+  switch (planId) {
+    case 'monthly':
+      return (
+        offering.monthly ??
+        offering.availablePackages.find(
+          (pkg) =>
+            pkg.identifier === '$rc_monthly' ||
+            pkg.product.identifier === productId,
+        ) ??
+        null
+      );
+    case 'sixMonth':
+      return (
+        offering.sixMonth ??
+        offering.availablePackages.find(
+          (pkg) =>
+            pkg.identifier === '$rc_six_month' ||
+            pkg.product.identifier === productId,
+        ) ??
+        null
+      );
+    case 'yearly':
+      return (
+        offering.annual ??
+        offering.availablePackages.find(
+          (pkg) =>
+            pkg.identifier === '$rc_annual' ||
+            pkg.product.identifier === productId,
+        ) ??
+        null
+      );
+  }
+}
+
+export async function getProPlans(): Promise<ProPlanOption[]> {
+  const offering = await getCurrentOffering();
+
+  if (!offering) {
+    return [];
+  }
+
+  return PRO_PLAN_ORDER.flatMap((planId) => {
+    const pkg = resolvePlanPackage(offering, planId);
+
+    if (!pkg) {
+      return [];
+    }
+
+    return [
+      {
+        id: planId,
+        package: pkg,
+        priceString: pkg.product.priceString,
+        discountPercent: PRO_PLAN_DISCOUNTS[planId],
+      },
+    ];
+  });
+}
+
+export async function purchaseProPlan(planId: ProPlanId): Promise<boolean> {
+  const offering = await getCurrentOffering();
+
+  if (!offering) {
+    throw new Error('No subscription offering is configured.');
+  }
+
+  const pkg = resolvePlanPackage(offering, planId);
 
   if (!pkg) {
-    throw new Error('No subscription offering is configured.');
+    throw new Error('Selected subscription plan is not available.');
   }
 
   const { customerInfo } = await Purchases.purchasePackage(pkg);
   return typeof customerInfo.entitlements.active[PRO_ENTITLEMENT_ID] !== 'undefined';
+}
+
+export async function getYearlyPackage(): Promise<PurchasesPackage | null> {
+  const offering = await getCurrentOffering();
+
+  if (!offering) {
+    return null;
+  }
+
+  return resolvePlanPackage(offering, 'yearly');
+}
+
+export async function purchaseYearlyPro(): Promise<boolean> {
+  return purchaseProPlan('yearly');
 }
 
 export async function restoreProPurchases(): Promise<boolean> {

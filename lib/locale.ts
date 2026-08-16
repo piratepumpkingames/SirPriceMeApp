@@ -175,6 +175,10 @@ type UiStrings = {
   proFeatureUnlimitedScans: string;
   proFeaturePdf: string;
   proFeatureCustomRooms: string;
+  proPlanMonthly: string;
+  proPlanSixMonth: string;
+  proPlanYearly: string;
+  proSavePercent: string;
   proSubscribe: string;
   proRestore: string;
   proClose: string;
@@ -407,7 +411,11 @@ export const ui: Record<ContentLocale, UiStrings> = {
     proFeatureUnlimitedScans: 'Unlimited AI photo scans every month',
     proFeaturePdf: 'Export your catalog as PDF',
     proFeatureCustomRooms: 'Create custom rooms in your catalog',
-    proSubscribe: 'Subscribe yearly',
+    proPlanMonthly: '1 month',
+    proPlanSixMonth: '6 months',
+    proPlanYearly: '1 year',
+    proSavePercent: 'Save {percent}%',
+    proSubscribe: 'Subscribe',
     proRestore: 'Restore purchases',
     proClose: 'Not now',
     proPurchaseSuccess: 'Welcome to SirPriceMe Pro!',
@@ -611,7 +619,11 @@ export const ui: Record<ContentLocale, UiStrings> = {
     proFeatureUnlimitedScans: 'Neomejeni AI foto skeni vsak mesec',
     proFeaturePdf: 'Izvoz kataloga v PDF',
     proFeatureCustomRooms: 'Ustvarjanje lastnih prostorov v katalogu',
-    proSubscribe: 'Letna naročnina',
+    proPlanMonthly: '1 mesec',
+    proPlanSixMonth: '6 mesecev',
+    proPlanYearly: '1 leto',
+    proSavePercent: 'Prihrani {percent}%',
+    proSubscribe: 'Naroči se',
     proRestore: 'Obnovi nakupe',
     proClose: 'Ne zdaj',
     proPurchaseSuccess: 'Dobrodošli v SirPriceMe Pro!',
@@ -815,7 +827,11 @@ export const ui: Record<ContentLocale, UiStrings> = {
     proFeatureUnlimitedScans: 'Neograničeni AI foto skenovi svaki mjesec',
     proFeaturePdf: 'Izvoz kataloga u PDF',
     proFeatureCustomRooms: 'Stvaranje vlastitih prostorija u katalogu',
-    proSubscribe: 'Godišnja pretplata',
+    proPlanMonthly: '1 mjesec',
+    proPlanSixMonth: '6 mjeseci',
+    proPlanYearly: '1 godina',
+    proSavePercent: 'Uštedi {percent}%',
+    proSubscribe: 'Pretplati se',
     proRestore: 'Vrati kupnje',
     proClose: 'Ne sada',
     proPurchaseSuccess: 'Dobrodošli u SirPriceMe Pro!',
@@ -1019,7 +1035,11 @@ export const ui: Record<ContentLocale, UiStrings> = {
     proFeatureUnlimitedScans: 'Unbegrenzte KI-Fotoscans pro Monat',
     proFeaturePdf: 'Katalog als PDF exportieren',
     proFeatureCustomRooms: 'Eigene Räume im Katalog anlegen',
-    proSubscribe: 'Jahresabo',
+    proPlanMonthly: '1 Monat',
+    proPlanSixMonth: '6 Monate',
+    proPlanYearly: '1 Jahr',
+    proSavePercent: '{percent} % sparen',
+    proSubscribe: 'Abonnieren',
     proRestore: 'Käufe wiederherstellen',
     proClose: 'Nicht jetzt',
     proPurchaseSuccess: 'Willkommen bei SirPriceMe Pro!',

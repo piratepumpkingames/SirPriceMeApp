@@ -4,17 +4,21 @@ import {
   Alert,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { ContentLocale } from '../lib/locale';
-import { getStrings } from '../lib/locale';
+import { formatString, getStrings } from '../lib/locale';
 import {
-  getYearlyPackage,
+  getProPlans,
   isBillingAvailable,
-  purchaseYearlyPro,
+  purchaseProPlan,
   restoreProPurchases,
+  type ProPlanId,
+  type ProPlanOption,
 } from '../lib/purchases';
 import { colors, radii } from '../lib/theme';
 
@@ -25,6 +29,17 @@ type ProPaywallModalProps = {
   onProActivated: () => void;
 };
 
+function getPlanLabel(planId: ProPlanId, strings: ReturnType<typeof getStrings>): string {
+  switch (planId) {
+    case 'monthly':
+      return strings.proPlanMonthly;
+    case 'sixMonth':
+      return strings.proPlanSixMonth;
+    case 'yearly':
+      return strings.proPlanYearly;
+  }
+}
+
 export function ProPaywallModal({
   visible,
   locale,
@@ -32,29 +47,43 @@ export function ProPaywallModal({
   onProActivated,
 }: ProPaywallModalProps) {
   const strings = getStrings(locale);
-  const [priceLabel, setPriceLabel] = useState<string | null>(null);
+  const [plans, setPlans] = useState<ProPlanOption[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<ProPlanId>('yearly');
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
   useEffect(() => {
     if (!visible || !isBillingAvailable()) {
-      setPriceLabel(null);
+      setPlans([]);
       return;
     }
 
     let cancelled = false;
+    setIsLoadingPlans(true);
 
-    void getYearlyPackage()
-      .then((pkg) => {
+    void getProPlans()
+      .then((loadedPlans) => {
         if (cancelled) {
           return;
         }
 
-        setPriceLabel(pkg?.product.priceString ?? null);
+        setPlans(loadedPlans);
+
+        if (loadedPlans.some((plan) => plan.id === 'yearly')) {
+          setSelectedPlanId('yearly');
+        } else if (loadedPlans[0]) {
+          setSelectedPlanId(loadedPlans[0].id);
+        }
       })
       .catch(() => {
         if (!cancelled) {
-          setPriceLabel(null);
+          setPlans([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingPlans(false);
         }
       });
 
@@ -72,7 +101,7 @@ export function ProPaywallModal({
     setIsPurchasing(true);
 
     try {
-      const activated = await purchaseYearlyPro();
+      const activated = await purchaseProPlan(selectedPlanId);
 
       if (activated) {
         Alert.alert(strings.proPaywallTitle, strings.proPurchaseSuccess);
@@ -116,53 +145,93 @@ export function ProPaywallModal({
     }
   }
 
-  const busy = isPurchasing || isRestoring;
+  const busy = isPurchasing || isRestoring || isLoadingPlans;
+  const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.overlay}>
-        <View style={styles.card}>
-          <Text style={styles.title}>{strings.proPaywallTitle}</Text>
-          <Text style={styles.body}>{strings.proPaywallBody}</Text>
+        <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+          <View style={styles.card}>
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+              <Text style={styles.title}>{strings.proPaywallTitle}</Text>
+              <Text style={styles.body}>{strings.proPaywallBody}</Text>
 
-          <View style={styles.featureList}>
-            <Text style={styles.featureItem}>• {strings.proFeatureUnlimitedScans}</Text>
-            <Text style={styles.featureItem}>• {strings.proFeaturePdf}</Text>
-            <Text style={styles.featureItem}>• {strings.proFeatureCustomRooms}</Text>
+              <View style={styles.featureList}>
+                <Text style={styles.featureItem}>• {strings.proFeatureUnlimitedScans}</Text>
+                <Text style={styles.featureItem}>• {strings.proFeaturePdf}</Text>
+                <Text style={styles.featureItem}>• {strings.proFeatureCustomRooms}</Text>
+              </View>
+
+              {isLoadingPlans ? (
+                <View style={styles.loadingWrap}>
+                  <ActivityIndicator color={colors.primary} />
+                </View>
+              ) : plans.length > 0 ? (
+                <View style={styles.planList}>
+                  {plans.map((plan) => {
+                    const selected = plan.id === selectedPlanId;
+
+                    return (
+                      <Pressable
+                        key={plan.id}
+                        style={[styles.planRow, selected && styles.planRowSelected]}
+                        onPress={() => setSelectedPlanId(plan.id)}
+                        disabled={busy}
+                      >
+                        <View style={styles.planTextWrap}>
+                          <Text style={styles.planLabel}>
+                            {getPlanLabel(plan.id, strings)}
+                          </Text>
+                          <Text style={styles.planPrice}>{plan.priceString}</Text>
+                        </View>
+                        {plan.discountPercent ? (
+                          <View style={styles.discountBadge}>
+                            <Text style={styles.discountBadgeText}>
+                              {formatString(strings.proSavePercent, {
+                                percent: String(plan.discountPercent),
+                              })}
+                            </Text>
+                          </View>
+                        ) : null}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : (
+                <Text style={styles.priceUnavailable}>{strings.proPriceUnavailable}</Text>
+              )}
+
+              <Pressable
+                style={[styles.primaryButton, busy && styles.buttonDisabled]}
+                onPress={() => void handlePurchase()}
+                disabled={busy || !selectedPlan}
+              >
+                {isPurchasing ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <Text style={styles.primaryButtonText}>{strings.proSubscribe}</Text>
+                )}
+              </Pressable>
+
+              <Pressable
+                style={[styles.secondaryButton, busy && styles.buttonDisabled]}
+                onPress={() => void handleRestore()}
+                disabled={busy}
+              >
+                {isRestoring ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={styles.secondaryButtonText}>{strings.proRestore}</Text>
+                )}
+              </Pressable>
+
+              <Pressable style={styles.textButton} onPress={onClose} disabled={busy}>
+                <Text style={styles.textButtonText}>{strings.proClose}</Text>
+              </Pressable>
+            </ScrollView>
           </View>
-
-          <Text style={styles.price}>
-            {priceLabel ?? strings.proPriceUnavailable}
-          </Text>
-
-          <Pressable
-            style={[styles.primaryButton, busy && styles.buttonDisabled]}
-            onPress={() => void handlePurchase()}
-            disabled={busy}
-          >
-            {isPurchasing ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text style={styles.primaryButtonText}>{strings.proSubscribe}</Text>
-            )}
-          </Pressable>
-
-          <Pressable
-            style={[styles.secondaryButton, busy && styles.buttonDisabled]}
-            onPress={() => void handleRestore()}
-            disabled={busy}
-          >
-            {isRestoring ? (
-              <ActivityIndicator color={colors.primary} />
-            ) : (
-              <Text style={styles.secondaryButtonText}>{strings.proRestore}</Text>
-            )}
-          </Pressable>
-
-          <Pressable style={styles.textButton} onPress={onClose} disabled={busy}>
-            <Text style={styles.textButtonText}>{strings.proClose}</Text>
-          </Pressable>
-        </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );
@@ -172,13 +241,19 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    padding: 24,
+    justifyContent: 'flex-end',
+  },
+  safeArea: {
+    width: '100%',
   },
   card: {
     backgroundColor: colors.white,
-    borderRadius: radii.xl,
-    padding: 20,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 8,
+    maxHeight: '92%',
   },
   title: {
     fontSize: 22,
@@ -200,12 +275,62 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
   },
-  price: {
+  loadingWrap: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    marginBottom: 16,
+  },
+  planList: {
+    gap: 10,
+    marginBottom: 16,
+  },
+  planRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    backgroundColor: colors.white,
+    gap: 12,
+  },
+  planRowSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  planTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  planLabel: {
     fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  planPrice: {
+    fontSize: 15,
     fontWeight: '600',
     color: colors.primary,
-    marginBottom: 16,
+  },
+  discountBadge: {
+    backgroundColor: colors.success,
+    borderRadius: radii.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexShrink: 0,
+  },
+  discountBadgeText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  priceUnavailable: {
+    fontSize: 15,
+    color: colors.textSecondary,
     textAlign: 'center',
+    marginBottom: 16,
   },
   primaryButton: {
     backgroundColor: colors.primary,

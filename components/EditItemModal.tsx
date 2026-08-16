@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarcodeScanModal } from './BarcodeScanModal';
 import type { ContentLocale } from '../lib/locale';
 import { getStrings } from '../lib/locale';
@@ -109,8 +110,11 @@ export function EditItemModal({
     <>
       <Modal visible={visible} animationType="slide" transparent>
         <View style={styles.overlay}>
-          <View style={styles.card}>
-            <ScrollView keyboardShouldPersistTaps="handled">
+          <SafeAreaView edges={['bottom']} style={styles.card}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.scrollContent}
+            >
               <Text style={styles.title}>{strings.editItemTitle}</Text>
 
               <Text style={styles.sectionLabel}>{strings.itemDetailsSection}</Text>
@@ -185,18 +189,20 @@ export function EditItemModal({
               </Pressable>
             </ScrollView>
 
-            <Pressable style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>{strings.saveChanges}</Text>
-            </Pressable>
-            <Pressable style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.cancelButtonText}>{strings.cancel}</Text>
-            </Pressable>
-            {onDelete ? (
-              <Pressable style={styles.deleteButton} onPress={onDelete}>
-                <Text style={styles.deleteButtonText}>{strings.deleteItem}</Text>
+            <View style={styles.actions}>
+              <Pressable style={styles.saveButton} onPress={handleSave}>
+                <Text style={styles.saveButtonText}>{strings.saveChanges}</Text>
               </Pressable>
-            ) : null}
-          </View>
+              <Pressable style={styles.cancelButton} onPress={onCancel}>
+                <Text style={styles.cancelButtonText}>{strings.cancel}</Text>
+              </Pressable>
+              {onDelete ? (
+                <Pressable style={styles.deleteButton} onPress={onDelete}>
+                  <Text style={styles.deleteButtonText}>{strings.deleteItem}</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          </SafeAreaView>
         </View>
       </Modal>
 
@@ -220,8 +226,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     maxHeight: '90%',
+  },
+  scrollContent: {
+    paddingBottom: 8,
+  },
+  actions: {
+    paddingTop: 8,
   },
   title: {
     fontSize: 20,
@@ -302,8 +315,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   deleteButton: {
-    marginTop: 4,
     paddingVertical: 12,
+    paddingBottom: 4,
     alignItems: 'center',
   },
   deleteButtonText: {
