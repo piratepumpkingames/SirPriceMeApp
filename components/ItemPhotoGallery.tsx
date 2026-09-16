@@ -17,6 +17,7 @@ type ItemPhotoGalleryProps = {
   photos: ItemPhoto[];
   locale: ContentLocale;
   editable?: boolean;
+  allowRemoveLast?: boolean;
   onAddPhoto?: () => void;
   onRemovePhoto?: (index: number) => void;
 };
@@ -25,6 +26,7 @@ export function ItemPhotoGallery({
   photos,
   locale,
   editable = false,
+  allowRemoveLast = false,
   onAddPhoto,
   onRemovePhoto,
 }: ItemPhotoGalleryProps) {
@@ -38,8 +40,14 @@ export function ItemPhotoGallery({
       return;
     }
 
-    if (photos.length <= 1) {
+    if (photos.length <= 1 && !allowRemoveLast) {
       Alert.alert(strings.removePhotoTitle, strings.removePhotoLast);
+      return;
+    }
+
+    if (photos.length <= 1) {
+      onRemovePhoto(index);
+      setSelectedIndex(0);
       return;
     }
 

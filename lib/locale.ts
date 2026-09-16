@@ -8,6 +8,8 @@ type UiStrings = {
   languageLabel: string;
   languageEnglish: string;
   takePhoto: string;
+  retakePhoto: string;
+  pendingReviewHint: string;
   analyze: string;
   analyzing: string;
   photoHint: string;
@@ -252,6 +254,9 @@ export const ui: Record<ContentLocale, UiStrings> = {
     languageLabel: 'Results language',
     languageEnglish: 'English',
     takePhoto: 'Take photo',
+    retakePhoto: 'Retake photo',
+    pendingReviewHint:
+      'Review your photo first. Analyzing uses one scan; retaking does not.',
     analyze: 'Analyze',
     analyzing: 'Analyzing...',
     photoHint: 'Your photo will appear here',
@@ -458,6 +463,9 @@ export const ui: Record<ContentLocale, UiStrings> = {
     languageLabel: 'Jezik rezultatov',
     languageEnglish: 'Angleščina',
     takePhoto: 'Fotografiraj',
+    retakePhoto: 'Ponovi fotografijo',
+    pendingReviewHint:
+      'Preverite fotografijo. Analiza porabi en sken; ponovno fotografiranje ne.',
     analyze: 'Analiziraj',
     analyzing: 'Analiziram...',
     photoHint: 'Vaša fotografija bo prikazana tukaj',
@@ -666,6 +674,9 @@ export const ui: Record<ContentLocale, UiStrings> = {
     languageLabel: 'Jezik rezultata',
     languageEnglish: 'Engleski',
     takePhoto: 'Fotografiraj',
+    retakePhoto: 'Ponovi fotografiju',
+    pendingReviewHint:
+      'Provjerite fotografiju. Analiza troši jedan sken; ponovno snimanje ne.',
     analyze: 'Analiziraj',
     analyzing: 'Analiziram...',
     photoHint: 'Vaša fotografija bit će ovdje',
@@ -874,6 +885,9 @@ export const ui: Record<ContentLocale, UiStrings> = {
     languageLabel: 'Ergebnissprache',
     languageEnglish: 'Englisch',
     takePhoto: 'Foto aufnehmen',
+    retakePhoto: 'Foto erneut aufnehmen',
+    pendingReviewHint:
+      'Prüfen Sie das Foto. Analysieren verbraucht einen Scan; erneutes Fotografieren nicht.',
     analyze: 'Analysieren',
     analyzing: 'Analysiere...',
     photoHint: 'Ihr Foto erscheint hier',

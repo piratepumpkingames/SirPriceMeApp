@@ -82,6 +82,7 @@ import { colors, radii, screenContent, typography } from './lib/theme';
 
 type Screen = 'home' | 'result' | 'itemDetail' | 'sell' | 'catalog';
 type CameraPurpose = 'pending' | 'item';
+type PendingCaptureMode = 'append' | 'replace';
 
 export default function App() {
   const cameraRef = useRef<CameraView>(null);
@@ -91,6 +92,8 @@ export default function App() {
   const [showCamera, setShowCamera] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraPurpose, setCameraPurpose] = useState<CameraPurpose>('pending');
+  const [pendingCaptureMode, setPendingCaptureMode] =
+    useState<PendingCaptureMode>('append');
   const [pendingPhotos, setPendingPhotos] = useState<ItemPhoto[]>([]);
   const [currentItem, setCurrentItem] = useState<ItemRecord | null>(null);
   const [catalogItems, setCatalogItems] = useState<ItemRecord[]>([]);
@@ -179,7 +182,10 @@ export default function App() {
     setScreen('home');
   }
 
-  async function takePhoto(purpose: CameraPurpose = 'pending') {
+  async function takePhoto(
+    purpose: CameraPurpose = 'pending',
+    options?: { replacePending?: boolean },
+  ) {
     if (!cameraPermission?.granted) {
       const permission = await requestCameraPermission();
       if (!permission.granted) {
@@ -189,6 +195,9 @@ export default function App() {
     }
 
     setCameraPurpose(purpose);
+    if (purpose === 'pending') {
+      setPendingCaptureMode(options?.replacePending ? 'replace' : 'append');
+    }
     setIsCameraReady(false);
     setShowCamera(true);
   }
@@ -215,6 +224,11 @@ export default function App() {
 
         const saved = await saveItem(updatedItem);
         setCurrentItem(saved);
+      } else if (pendingCaptureMode === 'replace') {
+        setPendingPhotos([newPhoto]);
+        setCurrentItem(null);
+        setErrorMessage(null);
+        setScreen('home');
       } else {
         setPendingPhotos((current) => [...current, newPhoto]);
         setCurrentItem(null);
@@ -223,6 +237,7 @@ export default function App() {
       }
     }
 
+    setPendingCaptureMode('append');
     setShowCamera(false);
   }
 
@@ -622,6 +637,7 @@ export default function App() {
       catalogCount === 0 && pendingPhotos.length === 0 && !isAnalyzing;
 
     return (
+      <SafeAreaView style={styles.homeSafe} edges={['top', 'left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.container}>
           <Text style={styles.title}>SirPriceMe</Text>
@@ -704,22 +720,33 @@ export default function App() {
                 style={styles.fullWidthButton}
               />
             ) : (
-              <AppButton
-                label={strings.analyze}
-                onPress={analyzePhoto}
-                disabled={isAnalyzing}
-                loading={isAnalyzing}
-                style={styles.fullWidthButton}
-              />
+              <>
+                <AppButton
+                  label={strings.retakePhoto}
+                  variant="secondary"
+                  onPress={() => void takePhoto('pending', { replacePending: true })}
+                  disabled={isAnalyzing}
+                  style={styles.halfWidthButton}
+                />
+                <AppButton
+                  label={strings.analyze}
+                  onPress={analyzePhoto}
+                  disabled={isAnalyzing}
+                  loading={isAnalyzing}
+                  style={styles.halfWidthButton}
+                />
+              </>
             )}
           </View>
 
           {pendingPhotos.length > 0 ? (
             <View style={styles.homeGallery}>
+              <Text style={styles.pendingReviewHint}>{strings.pendingReviewHint}</Text>
               <ItemPhotoGallery
                 photos={pendingPhotos}
                 locale={contentLocale}
                 editable
+                allowRemoveLast
                 onAddPhoto={() => void takePhoto('pending')}
                 onRemovePhoto={(index) => {
                   setPendingPhotos((current) =>
@@ -739,6 +766,7 @@ export default function App() {
           ) : null}
         </View>
       </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -905,6 +933,10 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  homeSafe: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
   scrollContent: {
     flexGrow: 1,
   },
@@ -968,12 +1000,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   buttonRow: {
+    flexDirection: 'row',
     gap: 12,
     marginBottom: 24,
     width: '100%',
   },
   fullWidthButton: {
+    flex: 1,
     marginBottom: 0,
+  },
+  halfWidthButton: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  pendingReviewHint: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginBottom: 10,
+    lineHeight: 20,
   },
   homeGallery: {
     width: '100%',
